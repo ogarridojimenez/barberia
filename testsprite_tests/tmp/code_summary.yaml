@@ -1,0 +1,308 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - Next.js 16.2.0
+  - React 19.2.4
+  - Tailwind CSS v4
+  - Supabase
+  - JWT (jose)
+  - bcryptjs
+  - Zod
+routes:
+  - path: /
+    file: src/app/page.tsx
+    auth_required: false
+    description: Landing page with hero section and CTAs
+  - path: /login
+    file: src/app/login/page.tsx
+    auth_required: false
+    description: User login form
+  - path: /register
+    file: src/app/register/page.tsx
+    auth_required: false
+    description: User registration form
+  - path: /dashboard
+    file: src/app/dashboard/page.tsx
+    auth_required: true
+    description: Client dashboard with stats and quick actions
+  - path: /citas
+    file: src/app/citas/page.tsx
+    auth_required: true
+    description: View and manage user appointments
+  - path: /citas/nueva
+    file: src/app/citas/nueva/page.tsx
+    auth_required: true
+    description: Book a new appointment
+  - path: /perfil
+    file: src/app/perfil/page.tsx
+    auth_required: true
+    description: User profile and password change
+  - path: /admin
+    file: src/app/admin/page.tsx
+    auth_required: true
+    description: Admin dashboard with business statistics
+  - path: /admin/citas
+    file: src/app/admin/citas/page.tsx
+    auth_required: true
+    description: Admin manage all appointments
+  - path: /admin/barberos
+    file: src/app/admin/barberos/page.tsx
+    auth_required: true
+    description: Admin CRUD barbers
+  - path: /admin/servicios
+    file: src/app/admin/servicios/page.tsx
+    auth_required: true
+    description: Admin CRUD services
+  - path: /admin/usuarios
+    file: src/app/admin/usuarios/page.tsx
+    auth_required: true
+    description: Admin manage user roles
+  - path: /barbero
+    file: src/app/barbero/page.tsx
+    auth_required: true
+    description: Barber view of scheduled appointments
+features:
+  - name: User Registration
+    description: Register new user account with email and password
+    files:
+      - src/app/register/page.tsx
+      - src/app/api/auth/register/route.ts
+    entry_route: /register
+    user_interactions:
+      - Navigate to /register
+      - Fill email input field
+      - Fill password input field
+      - Fill confirm password field
+      - Click Register button
+      - See error message on validation failure
+      - Redirect to /login on success
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/register
+    auth_required: false
+  - name: User Login
+    description: Login with email and password credentials
+    files:
+      - src/app/login/page.tsx
+      - src/app/login/login-form.tsx
+      - src/app/api/auth/login/route.ts
+    entry_route: /login
+    user_interactions:
+      - Navigate to /login
+      - Fill email input field
+      - Fill password input field
+      - Click Login button
+      - See error message on invalid credentials
+      - Redirect to role-specific dashboard on success
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/login
+    auth_required: false
+  - name: Client Dashboard
+    description: View welcome page with stats and quick actions
+    files:
+      - src/app/dashboard/page.tsx
+    entry_route: /dashboard
+    user_interactions:
+      - View greeting with email prefix
+      - View stat cards
+      - Click Mis Citas link
+      - Click Nueva Cita link
+      - Click Mi Perfil link
+    api_calls: []
+    auth_required: true
+  - name: Appointment Booking
+    description: Book a new barbershop appointment with barber, service, date and time
+    files:
+      - src/app/citas/nueva/page.tsx
+      - src/app/api/citas/route.ts
+      - src/app/api/barberos/route.ts
+      - src/app/api/servicios/route.ts
+      - src/app/api/barberos/[id]/horarios/route.ts
+    entry_route: /citas/nueva
+    user_interactions:
+      - Select barber from dropdown
+      - Select service from dropdown
+      - Pick weekday date
+      - Select available time slot from grid
+      - Add optional notes
+      - Click Agendar Cita button
+      - See confirmation or error message
+    api_calls:
+      - method: GET
+        endpoint: /api/barberos
+      - method: GET
+        endpoint: /api/servicios
+      - method: GET
+        endpoint: /api/barberos/[id]/horarios
+      - method: POST
+        endpoint: /api/citas
+    auth_required: true
+  - name: View Appointments
+    description: View list of active and cancelled appointments
+    files:
+      - src/app/citas/page.tsx
+      - src/app/api/citas/route.ts
+    entry_route: /citas
+    user_interactions:
+      - View active appointments table
+      - View cancelled appointments table
+      - Click Cancelar button on active appointment
+      - Confirm cancellation
+    api_calls:
+      - method: GET
+        endpoint: /api/citas
+      - method: PUT
+        endpoint: /api/citas/[id]
+    auth_required: true
+  - name: User Profile
+    description: View profile info and change password
+    files:
+      - src/app/perfil/page.tsx
+      - src/app/api/me/route.ts
+      - src/app/api/me/password/route.ts
+    entry_route: /perfil
+    user_interactions:
+      - View email and join date
+      - Fill current password
+      - Fill new password
+      - Fill confirm password
+      - Click Cambiar contrasena button
+      - See success or error message
+    api_calls:
+      - method: GET
+        endpoint: /api/me
+      - method: PUT
+        endpoint: /api/me/password
+    auth_required: true
+  - name: Admin Dashboard
+    description: View business statistics and revenue
+    files:
+      - src/app/admin/page.tsx
+      - src/app/api/admin/stats/route.ts
+    entry_route: /admin
+    user_interactions:
+      - View 8 metric cards
+      - View total revenue banner
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/stats
+    auth_required: true
+  - name: Admin Manage Appointments
+    description: Filter and manage all appointments
+    files:
+      - src/app/admin/citas/page.tsx
+      - src/app/api/admin/citas/route.ts
+    entry_route: /admin/citas
+    user_interactions:
+      - Filter by date
+      - Filter by barber
+      - Filter by status
+      - View appointments table
+      - Cancel active appointments
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/citas
+    auth_required: true
+  - name: Admin Manage Barbers
+    description: CRUD operations for barbers
+    files:
+      - src/app/admin/barberos/page.tsx
+      - src/app/api/admin/barberos/route.ts
+      - src/app/api/admin/barberos/[id]/route.ts
+    entry_route: /admin/barberos
+    user_interactions:
+      - Click Nuevo Barbero button
+      - Fill modal form with name, specialty, phone, photo
+      - Submit to create barber
+      - Click Editar to modify barber
+      - Click Activar/Desactivar to toggle status
+      - Click Eliminar and confirm to delete
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/barberos
+      - method: POST
+        endpoint: /api/admin/barberos
+      - method: PUT
+        endpoint: /api/admin/barberos/[id]
+      - method: DELETE
+        endpoint: /api/admin/barberos/[id]
+    auth_required: true
+  - name: Admin Manage Services
+    description: CRUD operations for services
+    files:
+      - src/app/admin/servicios/page.tsx
+      - src/app/api/admin/servicios/route.ts
+      - src/app/api/admin/servicios/[id]/route.ts
+    entry_route: /admin/servicios
+    user_interactions:
+      - Click Nuevo Servicio button
+      - Fill modal form with name, description, duration, price
+      - Submit to create service
+      - Click Editar to modify service
+      - Click Activar/Desactivar to toggle status
+      - Click Eliminar and confirm to delete
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/servicios
+      - method: POST
+        endpoint: /api/admin/servicios
+      - method: PUT
+        endpoint: /api/admin/servicios/[id]
+      - method: DELETE
+        endpoint: /api/admin/servicios/[id]
+    auth_required: true
+  - name: Admin Manage Users
+    description: View and change user roles
+    files:
+      - src/app/admin/usuarios/page.tsx
+      - src/app/api/admin/usuarios/route.ts
+      - src/app/api/admin/usuarios/[id]/route.ts
+    entry_route: /admin/usuarios
+    user_interactions:
+      - View all users table
+      - Change role via dropdown
+      - See confirmation message
+    api_calls:
+      - method: GET
+        endpoint: /api/admin/usuarios
+      - method: PUT
+        endpoint: /api/admin/usuarios/[id]
+    auth_required: true
+  - name: Barber Appointments View
+    description: View scheduled appointments grouped by date
+    files:
+      - src/app/barbero/page.tsx
+      - src/app/api/barberos/citas/route.ts
+    entry_route: /barbero
+    user_interactions:
+      - View appointments grouped by date
+      - See Hoy badge for today
+      - Cancel active appointments
+    api_calls:
+      - method: GET
+        endpoint: /api/barberos/citas
+    auth_required: true
+known_limitations:
+  - issue: Turbopack Runtime Error on page load
+    location: All pages
+    impact: App shows error dialog but still functions
+  - issue: Admin API endpoints lack role enforcement
+    location: src/app/api/admin/*.ts
+    impact: Any authenticated user can call admin endpoints
+  - issue: Dashboard stats are hardcoded placeholders
+    location: src/app/dashboard/page.tsx
+    impact: Clients see fake statistics
+  - issue: No completada state in enum
+    location: src/app/api/admin/stats/route.ts
+    impact: Revenue tracking always returns 0
+  - issue: Inconsistent enum in UpdateCitaSchema
+    location: src/app/api/citas/[id]/route.ts
+    impact: Old enum values would fail at database level
+  - issue: Debug endpoint publicly accessible
+    location: src/app/api/debug/route.ts
+    impact: Leaks JWT verification details
+  - issue: horarios_disponibles table unused
+    location: supabase/006_horarios_disponibles.sql
+    impact: Time slots generated dynamically instead

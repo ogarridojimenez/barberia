@@ -1,0 +1,35 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+export default function CitasLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#1a1a1a" }}>
+      <header style={{ borderBottom: "1px solid #27272A", background: "#18181B", position: "sticky", top: 0, zIndex: 50 }}>
+        <nav style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Link href="/dashboard">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18181B" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "#FAFAFA" }}>Gentleman&apos;s Cut</span>
+            </div>
+          </Link>
+          <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+            <Link href="/citas" style={{ fontSize: 14, color: pathname === "/citas" ? "#D4AF37" : "#A1A1AA", fontWeight: pathname === "/citas" ? 500 : 400 }}>Mis Citas</Link>
+            <Link href="/perfil" style={{ fontSize: 14, color: "#A1A1AA" }}>Perfil</Link>
+          </div>
+        </nav>
+      </header>
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+        {children}
+      </main>
+    </div>
+  );
+}
