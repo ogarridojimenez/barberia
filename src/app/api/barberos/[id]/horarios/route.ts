@@ -45,7 +45,7 @@ export async function GET(
       .select("hora_inicio, hora_fin")
       .eq("barbero_id", id)
       .eq("fecha", fecha)
-      .in("estado", ["pendiente", "confirmada"]);
+      .in("estado", ["activa"]);
 
     if (citasError) {
       return NextResponse.json(

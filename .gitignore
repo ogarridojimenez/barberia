@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# cookies and test files
+cookies.txt
+cookies2.txt
+test-cookies.txt
+test2.txt
+testsprite_tests/tmp/config.json

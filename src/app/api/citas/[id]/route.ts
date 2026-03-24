@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { verifyAuthToken, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { internalError } from "@/lib/api-errors";
 
 const UpdateCitaSchema = z.object({
   estado: z.enum(["activa", "cancelada"]),
@@ -46,7 +47,7 @@ export async function PUT(
     // Verificar que la cita pertenezca al usuario (o sea admin)
     const { data: cita, error: citaError } = await supabase
       .from("citas")
-      .select("id, usuario_id, estado")
+      .select("id, usuario_id, estado, fecha, hora_inicio")
       .eq("id", id)
       .single();
 
@@ -63,6 +64,23 @@ export async function PUT(
         { error: "FORBIDDEN" },
         { status: 403 }
       );
+    }
+
+    // Validación server-side: regla de 2 horas para cancelar
+    if (estado === "cancelada" && cita.estado === "activa") {
+      const citaDateTime = new Date(`${cita.fecha}T${cita.hora_inicio}`);
+      const now = new Date();
+      const diffHoras = (citaDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      if (diffHoras < 2 && payload.role !== "admin") {
+        return NextResponse.json(
+          {
+            error: "CANCEL_TOO_LATE",
+            message: "Solo puedes cancelar citas con al menos 2 horas de anticipación"
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Actualizar la cita
@@ -90,12 +108,6 @@ export async function PUT(
 
     return NextResponse.json({ cita: updatedCita });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }

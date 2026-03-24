@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyAuthToken, verifyAdminRole, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { internalError } from "@/lib/api-errors";
 
 export async function GET(req: NextRequest) {
   try {
@@ -41,10 +42,13 @@ export async function GET(req: NextRequest) {
     ]);
 
     // Calcular ingresos (basado en citas activas)
+    // NOTA: Para producción, considerar usar una función SQL agregada en Supabase
+    // en lugar de cargar datos en memoria
     const { data: citasActivasData } = await supabase
       .from("citas")
       .select("servicio_id, fecha")
-      .eq("estado", "activa");
+      .eq("estado", "activa")
+      .limit(1000); // Límite para prevenir OOM
 
     const { data: servicios } = await supabase
       .from("servicios")
@@ -75,12 +79,6 @@ export async function GET(req: NextRequest) {
       ingresosHoy,
     });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }

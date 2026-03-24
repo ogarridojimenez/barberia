@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -8,7 +8,8 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin() {
+  async function handleLogin(e: FormEvent) {
+    e.preventDefault();
     setError("");
 
     if (!email || !password) {
@@ -53,7 +54,7 @@ export default function LoginForm() {
           <p style={{ color: "#71717A", fontSize: 14 }}>Inicia sesión en tu cuenta</p>
         </div>
 
-        <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: 16, padding: 32 }}>
+        <form onSubmit={handleLogin} style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: 16, padding: 32 }}>
           {error && (
             <div style={{ padding: 14, marginBottom: 20, background: "#450A0A", color: "#FCA5A5", borderRadius: 8, fontSize: 14, border: "1px solid #EF4444" }}>
               {error}
@@ -70,6 +71,7 @@ export default function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
                 autoComplete="email"
+                required
                 style={{ width: "100%", padding: "12px 14px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}
               />
             </div>
@@ -82,21 +84,20 @@ export default function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
+                required
                 style={{ width: "100%", padding: "12px 14px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}
               />
             </div>
           </div>
 
           <button
-            id="login-btn"
-            type="button"
-            onClick={handleLogin}
+            type="submit"
             disabled={loading}
             style={{ width: "100%", marginTop: 28, padding: "14px", fontSize: 14, fontWeight: 600, color: "#18181B", background: "linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)", border: "none", borderRadius: 8, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, boxShadow: "0 4px 15px rgba(212, 175, 55, 0.3)" }}
           >
             {loading ? "Cargando..." : "Iniciar sesión"}
           </button>
-        </div>
+        </form>
 
         <div style={{ marginTop: 24, textAlign: "center" }}>
           <a href="/register" style={{ fontSize: 14, color: "#71717A", textDecoration: "none" }}>¿No tienes cuenta? <span style={{ color: "#D4AF37", fontWeight: 500 }}>Regístrate</span></a>

@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { checkRateLimit, getIpFromRequest } from "@/lib/rate-limit";
+import { internalError } from "@/lib/api-errors";
 
 const LoginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -105,15 +106,13 @@ export async function POST(req: NextRequest) {
     response.cookies.set("session_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" && !process.env.ALLOW_HTTP,
-      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24, // 1 día (antes 7 días)
       path: "/",
     });
 
     return response;
   } catch (err) {
-    return NextResponse.json(
-      { error: "INTERNAL_ERROR", details: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }

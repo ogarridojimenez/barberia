@@ -98,9 +98,10 @@ export async function DELETE(
 
     const supabase = createSupabaseAdminClient();
 
+    // Soft delete: desactivar en vez de eliminar
     const { error } = await supabase
       .from("barberos")
-      .delete()
+      .update({ activo: false })
       .eq("id", id);
 
     if (error) {
@@ -110,7 +111,7 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ message: "Barbero eliminado" });
+    return NextResponse.json({ message: "Barbero desactivado" });
   } catch (err) {
     return NextResponse.json(
       {
