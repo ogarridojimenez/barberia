@@ -1,35 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { verifyAuthToken, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { internalError } from "@/lib/api-errors";
+import { withAuth } from "@/lib/auth/middleware";
 
 const UpdateCitaSchema = z.object({
-  estado: z.enum(["activa", "cancelada"]),
+  estado: z.enum(["activa", "cancelada", "completada"]),
 });
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withAuth(
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }, payload) => {
     const { id } = await params;
-
-    const token = getTokenFromRequest(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "MISSING_TOKEN" },
-        { status: 401 }
-      );
-    }
-
-    const payload = await verifyAuthToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: "INVALID_TOKEN" },
-        { status: 401 }
-      );
-    }
 
     const body = await req.json();
     const parsed = UpdateCitaSchema.safeParse(body);
@@ -59,10 +39,30 @@ export async function PUT(
     }
 
     // Verificar permisos (solo el dueño o admin)
-    if (cita.usuario_id !== payload.sub && payload.role !== "admin") {
+    const isAdmin = payload.role === "admin";
+    const isBarbero = payload.role === "barbero";
+    const isOwner = cita.usuario_id === payload.sub;
+
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
         { error: "FORBIDDEN" },
         { status: 403 }
+      );
+    }
+
+    // Solo admin o barbero pueden marcar como completada
+    if (estado === "completada" && !isAdmin && !isBarbero) {
+      return NextResponse.json(
+        { error: "FORBIDDEN", message: "Solo admin o barbero pueden completar citas" },
+        { status: 403 }
+      );
+    }
+
+    // Solo se puede completar una cita activa
+    if (estado === "completada" && cita.estado !== "activa") {
+      return NextResponse.json(
+        { error: "INVALID_STATE", message: "Solo se pueden completar citas activas" },
+        { status: 400 }
       );
     }
 
@@ -72,7 +72,7 @@ export async function PUT(
       const now = new Date();
       const diffHoras = (citaDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-      if (diffHoras < 2 && payload.role !== "admin") {
+      if (diffHoras < 2 && !isAdmin) {
         return NextResponse.json(
           {
             error: "CANCEL_TOO_LATE",
@@ -107,7 +107,5 @@ export async function PUT(
     }
 
     return NextResponse.json({ cita: updatedCita });
-  } catch (err) {
-    return internalError(err);
   }
-}
+);

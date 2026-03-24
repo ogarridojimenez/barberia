@@ -13,7 +13,7 @@ interface Cita {
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
-  estado: "activa" | "cancelada";
+  estado: "activa" | "cancelada" | "completada";
   notas: string;
   usuario: { email: string };
   barbero: { nombre: string };
@@ -23,6 +23,7 @@ interface Cita {
 const estadoMap: Record<string, { bg: string; text: string; label: string }> = {
   activa: { bg: "#14532D", text: "#86EFAC", label: "Activa" },
   cancelada: { bg: "#450A0A", text: "#FCA5A5", label: "Cancelada" },
+  completada: { bg: "#1E3A5F", text: "#93C5FD", label: "Completada" },
 };
 
 export default function AdminCitasPage() {
@@ -154,6 +155,7 @@ export default function AdminCitasPage() {
               <option value="">Todos</option>
               <option value="activa">Activa</option>
               <option value="cancelada">Cancelada</option>
+              <option value="completada">Completada</option>
             </select>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
@@ -197,7 +199,10 @@ export default function AdminCitasPage() {
                   <td style={{ padding: "16px" }}>
                     <div style={{ display: "flex", gap: 8 }}>
                       {cita.estado === "activa" && (
-                        <button onClick={() => handleUpdateEstado(cita.id, "cancelada")} style={{ fontSize: 12, color: "#FCA5A5", background: "rgba(252, 165, 165, 0.1)", border: "none", cursor: "pointer", padding: "6px 10px", borderRadius: 6 }}>Cancelar</button>
+                        <>
+                          <button onClick={() => handleUpdateEstado(cita.id, "completada")} style={{ fontSize: 12, color: "#93C5FD", background: "rgba(147, 197, 253, 0.1)", border: "none", cursor: "pointer", padding: "6px 10px", borderRadius: 6 }}>Completar</button>
+                          <button onClick={() => handleUpdateEstado(cita.id, "cancelada")} style={{ fontSize: 12, color: "#FCA5A5", background: "rgba(252, 165, 165, 0.1)", border: "none", cursor: "pointer", padding: "6px 10px", borderRadius: 6 }}>Cancelar</button>
+                        </>
                       )}
                     </div>
                   </td>

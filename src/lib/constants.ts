@@ -6,6 +6,7 @@
 export const estadoCitaMap: Record<string, { label: string; color: string; bg: string }> = {
   activa: { label: "Activa", color: "#22C55E", bg: "rgba(34, 197, 94, 0.1)" },
   cancelada: { label: "Cancelada", color: "#EF4444", bg: "rgba(239, 68, 68, 0.1)" },
+  completada: { label: "Completada", color: "#3B82F6", bg: "rgba(59, 130, 246, 0.1)" },
 };
 
 // Mapeo de roles de usuario a colores y etiquetas

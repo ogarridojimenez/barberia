@@ -9,18 +9,29 @@ interface User {
   email: string;
 }
 
+interface DashboardStats {
+  citasProximas: number;
+  citasCompletadas: number;
+  totalCitas: number;
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUser();
+    fetchData();
   }, []);
 
-  async function fetchUser() {
+  async function fetchData() {
     try {
-      const data = await apiGet<{ user: User }>("/api/me");
-      setUser(data.user);
+      const [userData, statsData] = await Promise.all([
+        apiGet<{ user: User }>("/api/me"),
+        apiGet<DashboardStats>("/api/dashboard/stats"),
+      ]);
+      setUser(userData.user);
+      setStats(statsData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,10 +47,10 @@ export default function DashboardPage() {
     );
   }
 
-  const stats = [
-    { label: "Citas próximas", value: "2", href: "/citas" },
-    { label: "Citas completadas", value: "12", href: "/citas" },
-    { label: "Servicios favoritos", value: "4", href: "/perfil" },
+  const statsCards = [
+    { label: "Citas próximas", value: String(stats?.citasProximas ?? 0), href: "/citas" },
+    { label: "Citas completadas", value: String(stats?.citasCompletadas ?? 0), href: "/citas" },
+    { label: "Total citas", value: String(stats?.totalCitas ?? 0), href: "/citas" },
   ];
 
   const quickActions = [
@@ -104,7 +115,7 @@ export default function DashboardPage() {
           gap: 16,
         }}
       >
-        {stats.map((stat) => (
+        {statsCards.map((stat) => (
           <Link
             key={stat.label}
             href={stat.href}
