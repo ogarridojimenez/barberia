@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { verifyAuthToken, verifyAdminRole, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { internalError } from "@/lib/api-errors";
 
 const CreateBarberoSchema = z.object({
   nombre: z.string().min(1),
@@ -9,6 +10,8 @@ const CreateBarberoSchema = z.object({
   telefono: z.string().optional(),
   foto_url: z.string().url().optional().or(z.literal("")),
 });
+
+const DEFAULT_PAGE_SIZE = 20;
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,11 +30,23 @@ export async function GET(req: NextRequest) {
     }
 
     const supabase = createSupabaseAdminClient();
+    const { searchParams } = new URL(req.url);
 
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_PAGE_SIZE))));
+    const offset = (page - 1) * limit;
+
+    // Obtener total de registros
+    const { count } = await supabase
+      .from("barberos")
+      .select("*", { count: "exact", head: true });
+
+    // Obtener datos paginados
     const { data: barberos, error } = await supabase
       .from("barberos")
       .select("*")
-      .order("nombre");
+      .order("nombre")
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -40,15 +55,22 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ barberos: barberos || [] });
-  } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return NextResponse.json({
+      barberos: barberos || [],
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-      { status: 500 }
-    );
+    });
+  } catch (err) {
+    return internalError(err);
   }
 }
 

@@ -1,10 +1,10 @@
-# MEJORAS PENDIENTES — Barbería App
+# MEJORAS — Barbería App
 
-## Estado actual: Fase 1 completada ✅
+## Estado actual: 5 Fases Completadas ✅
 
 ---
 
-## ✅ COMPLETADO (Fase 1)
+## ✅ FASE 1 — Seguridad Crítica (COMPLETADA)
 
 | # | Problema | Solución implementada |
 |---|----------|----------------------|
@@ -22,47 +22,78 @@
 
 ---
 
-## SIGUIENTES MEJORAS (Prioridad)
+## ✅ FASE 2 — Funcionalidad (COMPLETADA)
 
-### Fase 2 — Funcionalidad rota (ALTO)
+| # | Problema | Solución implementada |
+|---|----------|----------------------|
+| AL-9 | Dashboard con datos falsos | Endpoint `/api/dashboard/stats` con datos reales |
+| AL-10 | Sin estado "completada" | Migración 009 + enum actualizado + UI botón "Completar" |
+| AL-11 | Auth boilerplate repetido | Wrapper `withAuth()` en src/lib/auth/middleware.ts |
 
-| # | Problema | Impacto | Esfuerzo |
-|---|----------|---------|----------|
-| **AL-9** | Dashboard cliente muestra datos falsos hardcodeados | HIGH | Medio |
-| **AL-10** | No existe estado "completada" para citas (revenue siempre $0) | HIGH | Medio |
-| **AL-11** | Auth boilerplate repetido en 19 archivos API | Medio | Medio |
+---
 
-### Fase 3 — DRY y Tests (ALTO)
+## ✅ FASE 3 — Tests (COMPLETADA)
 
-| # | Problema | Impacto | Esfuerzo |
-|---|----------|---------|----------|
-| **AL-12** | Zero tests unitarios para API routes | HIGH | Grande |
-| **AL-13** | Sin tests E2E para flujo de reservas | HIGH | Medio |
+| # | Problema | Solución implementada |
+|---|----------|----------------------|
+| AL-12 | Zero tests unitarios | 50 tests pasando (JWT, login, register, middleware, citas) |
+| AL-13 | Sin tests E2E | Playwright: login, appointments, admin, barber, auth |
 
-### Fase 4 — Arquitectura (MEDIO)
+---
 
-| # | Problema | Impacto | Esfuerzo |
-|---|----------|---------|----------|
-| **ME-16** | Sin componentes UI reutilizables | Medio | Grande |
-| **ME-20** | Sin políticas RLS en Supabase | HIGH | Grande |
-| **ME-21** | Sin constraint unique para doble reserva | Medio | Pequeño |
+## ✅ FASE 4 — Arquitectura (COMPLETADA)
 
-### Fase 5 — UX (MEDIO-BAJO)
+| # | Problema | Solución implementada |
+|---|----------|----------------------|
+| ME-16 | Sin componentes UI | Button, Card, Modal, Input, Badge, Select, Skeleton |
+| ME-20 | Sin políticas RLS | Migración 010_rls_policies.sql |
+| ME-21 | Sin constraint unique | Migración 011_unique_cita_slot.sql |
 
-| # | Problema | Impacto | Esfuerzo |
-|---|----------|---------|----------|
-| **ME-17** | Sin diseño responsive | Medio | Grande |
-| **ME-23** | Sin loading skeletons | Medio | Medio |
-| **ME-24** | Perfil sin nombre/teléfono | Medio | Medio |
+---
 
-### Backlog (BAJO)
+## ✅ FASE 5 — UX (COMPLETADA)
 
-| # | Problema |
-|---|----------|
-| BA-26 | Directorios vacíos sin usar |
-| BA-27 | Sin accesibilidad (ARIA) |
-| BA-28 | Sin notificaciones email |
-| BA-29 | Imagen Unsplash externa |
-| BA-30 | Sin tests de componentes |
-| BA-31 | Sin ilustraciones en vacíos |
-| BA-32 | Sin CHECK constraints DB |
+| # | Problema | Solución implementada |
+|---|----------|----------------------|
+| ME-24 | Perfil sin nombre/teléfono | Migración 012 + API /api/me PUT + página perfil |
+| ME-23 | Sin loading skeletons | Componente Skeleton + SkeletonCard/Table/Form |
+| ME-17 | Sin diseño responsive | CSS utilities: .grid-stats, breakpoints tablet/mobile |
+
+---
+
+## 📋 MEJORAS PENDIENTES (Backlog)
+
+### Medio Impacto
+
+| # | Problema | Impacto | Esfuerzo | Descripción |
+|---|----------|---------|----------|-------------|
+| AL-8 | Sin paginación en listados | Medio | Medio | Endpoints retornan todos los registros |
+| ME-12 | Tests para admin endpoints | Medio | Medio | Faltan tests para admin/stats, admin/barberos |
+
+### Bajo Impacto
+
+| # | Problema | Impacto | Esfuerzo | Descripción |
+|---|----------|---------|----------|-------------|
+| BA-26 | Directorios vacíos sin usar | Bajo | Pequeño | src/components/, src/lib/db/ |
+| BA-27 | Sin accesibilidad (ARIA) | Medio | Grande | Atributos ARIA en componentes |
+| BA-28 | Sin notificaciones email | Medio | Grande | Recordatorios de citas |
+| BA-29 | Imagen Unsplash externa | Bajo | Pequeño | Landing page usa imagen externa |
+| BA-30 | Sin tests de componentes | Bajo | Medio | Tests para componentes UI |
+| BA-31 | Sin ilustraciones en vacíos | Bajo | Pequeño | Estados vacíos sin ilustraciones |
+| BA-32 | Sin CHECK constraints DB | Bajo | Pequeño | Validaciones a nivel de DB |
+
+---
+
+## 📊 Resumen del Proyecto
+
+| Categoría | Estado |
+|-----------|--------|
+| **Seguridad** | ✅ Completada |
+| **Funcionalidad** | ✅ Completada |
+| **Tests** | ✅ 50 pasando |
+| **Arquitectura** | ✅ Componentes UI + RLS + Constraints |
+| **UX** | ✅ Responsive + Skeletons + Perfil |
+| **Documentación** | ✅ README + CLAUDE + AGENTS actualizados |
+
+**Total mejoras implementadas: 25**
+**Total mejoras pendientes: 8 (todas de bajo-medio impacto)**

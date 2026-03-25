@@ -5,3 +5,4 @@ export { Input } from "./Input";
 export { Badge } from "./Badge";
 export { Select } from "./Select";
 export { Skeleton, SkeletonCard, SkeletonTable, SkeletonForm } from "./Skeleton";
+export { Pagination } from "./Pagination";

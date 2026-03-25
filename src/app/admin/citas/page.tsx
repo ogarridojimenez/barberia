@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchApi } from "@/lib/auth/client";
+import { Pagination } from "@/components/ui";
 
 interface Barbero {
   id: string;
@@ -20,6 +21,15 @@ interface Cita {
   servicio: { nombre: string; precio: number };
 }
 
+interface PaginationData {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 const estadoMap: Record<string, { bg: string; text: string; label: string }> = {
   activa: { bg: "#14532D", text: "#86EFAC", label: "Activa" },
   cancelada: { bg: "#450A0A", text: "#FCA5A5", label: "Cancelada" },
@@ -34,6 +44,8 @@ export default function AdminCitasPage() {
   const [filtroEstado, setFiltroEstado] = useState("");
   const [filtroBarbero, setFiltroBarbero] = useState("");
   const [mensaje, setMensaje] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationData | null>(null);
 
   useEffect(() => {
     fetchBarberos();
@@ -41,11 +53,11 @@ export default function AdminCitasPage() {
 
   useEffect(() => {
     fetchCitas();
-  }, [filtroFecha, filtroEstado, filtroBarbero]);
+  }, [filtroFecha, filtroEstado, filtroBarbero, page]);
 
   async function fetchBarberos() {
     try {
-      const res = await fetchApi("/api/admin/barberos");
+      const res = await fetchApi("/api/admin/barberos?limit=100");
       const data = await res.json();
       setBarberos(data.barberos || []);
     } catch (err) {
@@ -55,7 +67,7 @@ export default function AdminCitasPage() {
 
   async function fetchCitas() {
     try {
-      let url = "/api/admin/citas?";
+      let url = `/api/admin/citas?page=${page}&`;
       if (filtroFecha) url += `fecha=${filtroFecha}&`;
       if (filtroEstado) url += `estado=${filtroEstado}&`;
       if (filtroBarbero) url += `barbero_id=${filtroBarbero}&`;
@@ -65,11 +77,24 @@ export default function AdminCitasPage() {
 
       const data = await res.json();
       setCitas(data.citas || []);
+      setPagination(data.pagination || null);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function limpiarFiltros() {
+    setFiltroFecha("");
+    setFiltroEstado("");
+    setFiltroBarbero("");
+    setPage(1);
   }
 
   async function handleUpdateEstado(citaId: string, nuevoEstado: string) {
@@ -90,16 +115,10 @@ export default function AdminCitasPage() {
     }
   }
 
-  function limpiarFiltros() {
-    setFiltroFecha("");
-    setFiltroEstado("");
-    setFiltroBarbero("");
-  }
-
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", padding: 64 }}>
-        <span style={{ color: "#71717A" }}>Cargando...</span>
+        <span style={{ color: "#71717A" }}>Cargando citas...</span>
       </div>
     );
   }
@@ -112,6 +131,7 @@ export default function AdminCitasPage() {
         </h1>
         <p style={{ color: "#71717A", fontSize: 15 }}>
           Administra todas las citas de la barbería
+          {pagination && ` (${pagination.totalItems} total)`}
         </p>
       </div>
 
@@ -130,40 +150,44 @@ export default function AdminCitasPage() {
         </div>
       )}
 
-      <div style={{ padding: 20, background: "#18181B", border: "1px solid #27272A", borderRadius: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#FAFAFA" }}>Filtros</span>
+      {/* Filtros */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: 16,
+          padding: 20,
+          background: "#18181B",
+          border: "1px solid #27272A",
+          borderRadius: 12,
+        }}
+      >
+        <div>
+          <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>Fecha</label>
+          <input type="date" value={filtroFecha} onChange={(e) => { setFiltroFecha(e.target.value); setPage(1); }} style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-          <div>
-            <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>Fecha</label>
-            <input type="date" value={filtroFecha} onChange={(e) => setFiltroFecha(e.target.value)} style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }} />
-          </div>
-          <div>
-            <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>Barbero</label>
-            <select value={filtroBarbero} onChange={(e) => setFiltroBarbero(e.target.value)} style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}>
-              <option value="">Todos los barberos</option>
-              {barberos.map((b) => <option key={b.id} value={b.id}>{b.nombre}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>Estado</label>
-            <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}>
-              <option value="">Todos</option>
-              <option value="activa">Activa</option>
-              <option value="cancelada">Cancelada</option>
-              <option value="completada">Completada</option>
-            </select>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button onClick={limpiarFiltros} style={{ padding: "10px 16px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "transparent", color: "#A1A1AA", cursor: "pointer" }}>Limpiar filtros</button>
-          </div>
+        <div>
+          <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>Barbero</label>
+          <select value={filtroBarbero} onChange={(e) => { setFiltroBarbero(e.target.value); setPage(1); }} style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}>
+            <option value="">Todos los barberos</option>
+            {barberos.map((b) => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>Estado</label>
+          <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPage(1); }} style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}>
+            <option value="">Todos</option>
+            <option value="activa">Activa</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="completada">Completada</option>
+          </select>
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-end" }}>
+          <button onClick={limpiarFiltros} style={{ padding: "10px 16px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "transparent", color: "#A1A1AA", cursor: "pointer" }}>Limpiar filtros</button>
         </div>
       </div>
 
+      {/* Tabla */}
       <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: 12, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -213,6 +237,17 @@ export default function AdminCitasPage() {
         </table>
         {citas.length === 0 && <div style={{ padding: 48, textAlign: "center", color: "#71717A" }}>No hay citas para mostrar</div>}
       </div>
+
+      {/* Paginación */}
+      {pagination && pagination.totalPages > 1 && (
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.limit}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }
