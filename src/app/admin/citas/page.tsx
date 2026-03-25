@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchApi } from "@/lib/auth/client";
-import { Pagination, EmptyState, EmptyCitasIcon } from "@/components/ui";
+import { Pagination, EmptyState, EmptyCitasIcon, TableWrapper } from "@/components/ui";
 
 interface Barbero {
   id: string;
@@ -189,7 +189,8 @@ export default function AdminCitasPage() {
 
       {/* Tabla */}
       <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <TableWrapper>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #27272A", background: "#27272A" }}>
               {["Cliente", "Fecha / Hora", "Barbero", "Servicio", "Estado", "Acciones"].map((h) => (
@@ -235,6 +236,7 @@ export default function AdminCitasPage() {
             })}
           </tbody>
         </table>
+        </TableWrapper>
         {citas.length === 0 && (
           <EmptyState
             icon={<EmptyCitasIcon />}

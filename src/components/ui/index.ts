@@ -8,3 +8,5 @@ export { Skeleton, SkeletonCard, SkeletonTable, SkeletonForm } from "./Skeleton"
 export { Pagination } from "./Pagination";
 export { EmptyState, EmptyCitasIcon, EmptyUsersIcon, EmptyServiciosIcon } from "./EmptyState";
 export { ImageUpload } from "./ImageUpload";
+export { PasswordStrength } from "./PasswordStrength";
+export { TableWrapper } from "./TableWrapper";

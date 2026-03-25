@@ -2,7 +2,7 @@
 
 import { useRef, useState, FormEvent } from "react";
 import Link from "next/link";
-import { ImageUpload } from "@/components/ui";
+import { ImageUpload, PasswordStrength } from "@/components/ui";
 
 async function registerUser(
   email: string,
@@ -26,6 +26,7 @@ export default function RegisterPage() {
   const nombreRef = useRef<HTMLInputElement>(null);
   const apellidosRef = useRef<HTMLInputElement>(null);
   const [fotoUrl, setFotoUrl] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -228,9 +229,12 @@ export default function RegisterPage() {
                   required
                   minLength={8}
                   ref={passwordRef}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Mínimo 8 caracteres"
                   style={inputStyle}
                 />
+                <PasswordStrength password={password} />
               </div>
 
               {/* Confirmar contraseña */}

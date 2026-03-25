@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { internalError } from "@/lib/api-errors";
 
 export async function GET() {
   try {
@@ -13,19 +14,18 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json(
-        { error: "DB_ERROR", details: error.message },
+        { error: "DB_ERROR", message: "Error al obtener barberos" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ barberos: barberos || [] });
+    const response = NextResponse.json({ barberos: barberos || [] });
+
+    // Cache por 5 minutos (barberos cambian poco)
+    response.headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
+
+    return response;
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }
