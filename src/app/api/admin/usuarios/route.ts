@@ -27,22 +27,32 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_PAGE_SIZE))));
     const offset = (page - 1) * limit;
+    const search = searchParams.get("search") || "";
+    const role = searchParams.get("role") || "";
 
-    // Obtener total de registros
-    const { count } = await supabase
+    // Construir query base
+    let query = supabase
       .from("app_users")
-      .select("*", { count: "exact", head: true });
+      .select("id, email, nombre, apellidos, telefono, foto_url, user_role, created_at", { count: "exact" });
+
+    // Aplicar filtro de búsqueda (nombre o email)
+    if (search) {
+      query = query.or(`nombre.ilike.%${search}%,email.ilike.%${search}%,apellidos.ilike.%${search}%`);
+    }
+
+    // Aplicar filtro de rol
+    if (role) {
+      query = query.eq("user_role", role);
+    }
 
     // Obtener datos paginados
-    const { data: usuarios, error } = await supabase
-      .from("app_users")
-      .select("id, email, user_role, created_at")
+    const { data: usuarios, error, count } = await query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
-        { error: "DB_ERROR", details: error.message },
+        { error: "DB_ERROR", message: "Error al obtener usuarios" },
         { status: 500 }
       );
     }
