@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { getErrorMessage } from "@/lib/error-messages";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -29,7 +30,7 @@ export default function LoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || data.error || "Error al iniciar sesión");
+        setError(getErrorMessage(data.error) || data.message || "Error al iniciar sesión");
         setLoading(false);
         return;
       }
@@ -56,7 +57,7 @@ export default function LoginForm() {
 
         <form onSubmit={handleLogin} style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: 16, padding: 32 }}>
           {error && (
-            <div style={{ padding: 14, marginBottom: 20, background: "#450A0A", color: "#FCA5A5", borderRadius: 8, fontSize: 14, border: "1px solid #EF4444" }}>
+            <div role="alert" style={{ padding: 14, marginBottom: 20, background: "#450A0A", color: "#FCA5A5", borderRadius: 8, fontSize: 14, border: "1px solid #EF4444" }}>
               {error}
             </div>
           )}
@@ -72,6 +73,7 @@ export default function LoginForm() {
                 placeholder="tu@email.com"
                 autoComplete="email"
                 required
+                aria-required="true"
                 style={{ width: "100%", padding: "12px 14px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}
               />
             </div>
@@ -85,6 +87,7 @@ export default function LoginForm() {
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
+                aria-required="true"
                 style={{ width: "100%", padding: "12px 14px", fontSize: 14, border: "1px solid #3F3F46", borderRadius: 8, background: "#27272A", color: "#FAFAFA", outline: "none" }}
               />
             </div>
@@ -93,9 +96,10 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={loading}
+            aria-busy={loading}
             style={{ width: "100%", marginTop: 28, padding: "14px", fontSize: 14, fontWeight: 600, color: "#18181B", background: "linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)", border: "none", borderRadius: 8, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, boxShadow: "0 4px 15px rgba(212, 175, 55, 0.3)" }}
           >
-            {loading ? "Cargando..." : "Iniciar sesión"}
+            {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </button>
         </form>
 

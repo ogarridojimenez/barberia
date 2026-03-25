@@ -3,6 +3,19 @@ import { Redis } from "@upstash/redis";
 let redis: Redis | null = null;
 let redisAvailable: boolean | null = null;
 
+// In-memory fallback para cuando Redis no está disponible
+const memoryStore = new Map<string, { count: number; expiresAt: number }>();
+
+// Limpiar entradas expiradas cada 5 minutos
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of memoryStore.entries()) {
+    if (value.expiresAt < now) {
+      memoryStore.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
 function getRedis(): Redis | null {
   if (redisAvailable === false) return null;
 
@@ -35,8 +48,8 @@ export interface RateLimitResult {
 }
 
 /**
- * Verifica si un identificador (IP, email, etc.) excedió el rate limit
- *
+ * Rate limiting con fallback a memoria cuando Redis no está disponible.
+ * 
  * @param identifier - Identificador único (ej: IP, email)
  * @param limit - Máximo de requests permitidas
  * @param window - Ventana de tiempo en segundos
@@ -47,34 +60,60 @@ export async function checkRateLimit(
   window: number = 60
 ): Promise<RateLimitResult> {
   const db = getRedis();
-  
-  if (!db) {
+
+  // Si Redis está disponible, usar Redis
+  if (db) {
+    try {
+      const key = `ratelimit:${identifier}`;
+      const current = await db.incr(key);
+
+      if (current === 1) {
+        await db.expire(key, window);
+      }
+
+      const ttl = await db.ttl(key);
+      const reset = Date.now() + (ttl > 0 ? ttl * 1000 : window * 1000);
+
+      return {
+        allowed: current <= limit,
+        remaining: Math.max(0, limit - current),
+        reset,
+        limit,
+      };
+    } catch {
+      // Si Redis falla, usar fallback en memoria
+      redisAvailable = false;
+    }
+  }
+
+  // Fallback: usar memoria local
+  const key = `ratelimit:${identifier}`;
+  const now = Date.now();
+  const entry = memoryStore.get(key);
+
+  if (!entry || entry.expiresAt < now) {
+    // Primera request o entrada expirada
+    memoryStore.set(key, {
+      count: 1,
+      expiresAt: now + window * 1000,
+    });
+
     return {
       allowed: true,
       remaining: limit - 1,
-      reset: Date.now() + window * 1000,
+      reset: now + window * 1000,
       limit,
     };
   }
 
-  const key = `ratelimit:${identifier}`;
-
-  // Incrementa el contador y obtiene el valor actual
-  const current = await db.incr(key);
-
-  // Si es el primer request, setear el expiry
-  if (current === 1) {
-    await db.expire(key, window);
-  }
-
-  // Calcular tiempo restante hasta reset
-  const ttl = await db.ttl(key);
-  const reset = Date.now() + (ttl > 0 ? ttl * 1000 : window * 1000);
+  // Incrementar contador
+  entry.count++;
+  memoryStore.set(key, entry);
 
   return {
-    allowed: current <= limit,
-    remaining: Math.max(0, limit - current),
-    reset,
+    allowed: entry.count <= limit,
+    remaining: Math.max(0, limit - entry.count),
+    reset: entry.expiresAt,
     limit,
   };
 }

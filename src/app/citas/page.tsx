@@ -17,11 +17,13 @@ interface Cita {
 const estadoMap: Record<string, { bg: string; text: string; label: string }> = {
   activa: { bg: "#14532D", text: "#86EFAC", label: "Activa" },
   cancelada: { bg: "#450A0A", text: "#FCA5A5", label: "Cancelada" },
+  completada: { bg: "#1E3A5F", text: "#93C5FD", label: "Completada" },
 };
 
 export default function CitasPage() {
   const [citasActivas, setCitasActivas] = useState<Cita[]>([]);
   const [citasCanceladas, setCitasCanceladas] = useState<Cita[]>([]);
+  const [citasCompletadas, setCitasCompletadas] = useState<Cita[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -39,6 +41,7 @@ export default function CitasPage() {
       const todas = data.citas || [];
       setCitasActivas(todas.filter((c: Cita) => c.estado === "activa"));
       setCitasCanceladas(todas.filter((c: Cita) => c.estado === "cancelada"));
+      setCitasCompletadas(todas.filter((c: Cita) => c.estado === "completada"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
@@ -85,7 +88,7 @@ export default function CitasPage() {
     );
   }
 
-  const todasLasCitas = [...citasActivas, ...citasCanceladas];
+  const todasLasCitas = [...citasActivas, ...citasCanceladas, ...citasCompletadas];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -334,6 +337,88 @@ export default function CitasPage() {
                           </td>
                           <td style={{ padding: "16px", fontSize: 14, color: "#71717A" }}>
                             {cita.servicio?.nombre}
+                          </td>
+                          <td style={{ padding: "16px" }}>
+                            <span
+                              style={{
+                                padding: "6px 12px",
+                                borderRadius: 6,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: est.bg,
+                                color: est.text,
+                              }}
+                            >
+                              {est.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {citasCompletadas.length > 0 && (
+            <div>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#93C5FD", marginBottom: 16 }}>
+                Historial Completadas ({citasCompletadas.length})
+              </h2>
+              <div
+                style={{
+                  background: "#18181B",
+                  border: "1px solid #27272A",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                }}
+              >
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #27272A", background: "#27272A" }}>
+                      {["Fecha", "Hora", "Barbero", "Servicio", "Estado"].map((h) => (
+                        <th
+                          key={h}
+                          style={{
+                            padding: "14px 16px",
+                            textAlign: "left",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#93C5FD",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {citasCompletadas.map((cita) => {
+                      const est = estadoMap[cita.estado] || estadoMap.completada;
+                      return (
+                        <tr
+                          key={cita.id}
+                          style={{ borderBottom: "1px solid #27272A" }}
+                        >
+                          <td style={{ padding: "16px", fontSize: 14, color: "#93C5FD" }}>
+                            {new Date(cita.fecha).toLocaleDateString("es-ES", {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </td>
+                          <td style={{ padding: "16px", fontSize: 14, color: "#93C5FD" }}>
+                            {cita.hora_inicio} - {cita.hora_fin}
+                          </td>
+                          <td style={{ padding: "16px", fontSize: 14, color: "#93C5FD" }}>
+                            {cita.barbero?.nombre}
+                          </td>
+                          <td style={{ padding: "16px", fontSize: 14, color: "#93C5FD" }}>
+                            <div>{cita.servicio?.nombre}</div>
+                            <div style={{ fontSize: 12, color: "#D4AF37" }}>${Number(cita.servicio?.precio).toLocaleString()}</div>
                           </td>
                           <td style={{ padding: "16px" }}>
                             <span
