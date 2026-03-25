@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const supabase = createSupabaseAdminClient();
     const { data: user, error: userError } = await supabase
       .from("app_users")
-      .select("id, email, nombre, telefono, created_at")
+      .select("id, email, nombre, apellidos, telefono, foto_url, created_at")
       .eq("id", payload.sub)
       .single();
 
@@ -40,7 +40,9 @@ export async function GET(req: NextRequest) {
         id: user.id,
         email: user.email,
         nombre: user.nombre,
+        apellidos: user.apellidos,
         telefono: user.telefono,
+        foto_url: user.foto_url,
         created_at: user.created_at,
       },
     });
@@ -68,12 +70,19 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { nombre, telefono } = body;
+    const { nombre, apellidos, telefono, foto_url } = body;
 
     // Validaciones básicas
     if (nombre && typeof nombre !== "string") {
       return NextResponse.json(
         { error: "INVALID_INPUT", message: "Nombre debe ser texto" },
+        { status: 400 }
+      );
+    }
+
+    if (apellidos && typeof apellidos !== "string") {
+      return NextResponse.json(
+        { error: "INVALID_INPUT", message: "Apellidos debe ser texto" },
         { status: 400 }
       );
     }
@@ -85,15 +94,24 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    if (foto_url && typeof foto_url !== "string") {
+      return NextResponse.json(
+        { error: "INVALID_INPUT", message: "URL de foto inválida" },
+        { status: 400 }
+      );
+    }
+
     const supabase = createSupabaseAdminClient();
     const { data: user, error: updateError } = await supabase
       .from("app_users")
       .update({
         nombre: nombre || null,
+        apellidos: apellidos || null,
         telefono: telefono || null,
+        foto_url: foto_url || null,
       })
       .eq("id", payload.sub)
-      .select("id, email, nombre, telefono, created_at")
+      .select("id, email, nombre, apellidos, telefono, foto_url, created_at")
       .single();
 
     if (updateError) {
@@ -108,7 +126,9 @@ export async function PUT(req: NextRequest) {
         id: user.id,
         email: user.email,
         nombre: user.nombre,
+        apellidos: user.apellidos,
         telefono: user.telefono,
+        foto_url: user.foto_url,
         created_at: user.created_at,
       },
     });

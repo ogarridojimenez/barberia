@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit, getIpFromRequest } from "@/lib/rate-limit";
+import { internalError } from "@/lib/api-errors";
 
 const RegisterSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -11,6 +12,9 @@ const RegisterSchema = z.object({
     .string()
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .max(72, "La contraseña es demasiado larga"),
+  nombre: z.string().min(1, "El nombre es requerido").max(100).optional(),
+  apellidos: z.string().min(1, "Los apellidos son requeridos").max(100).optional(),
+  foto_url: z.string().url("URL de foto inválida").optional().or(z.literal("")),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password } = parsed.data;
+    const { email, password, nombre, apellidos, foto_url } = parsed.data;
 
     // Rate limiting por IP (más estricto para registros: 3 por hora)
     const ip = getIpFromRequest(req);
@@ -61,8 +65,15 @@ export async function POST(req: NextRequest) {
 
     const { data: user, error } = await supabase
       .from("app_users")
-      .insert({ email, password_hash: passwordHash, user_role: "cliente" })
-      .select("id, email")
+      .insert({
+        email,
+        password_hash: passwordHash,
+        user_role: "cliente",
+        nombre: nombre || null,
+        apellidos: apellidos || null,
+        foto_url: foto_url || null,
+      })
+      .select("id, email, nombre, apellidos, foto_url")
       .single();
 
     if (error) {
@@ -79,15 +90,21 @@ export async function POST(req: NextRequest) {
     }
 
     const response = NextResponse.json(
-      { user: { id: user.id, email: user.email, role: "cliente" } },
+      {
+        user: {
+          id: user.id,
+          email: user.email,
+          nombre: user.nombre,
+          apellidos: user.apellidos,
+          foto_url: user.foto_url,
+          role: "cliente",
+        },
+      },
       { status: 201 }
     );
 
     return response;
   } catch (err) {
-    return NextResponse.json(
-      { error: "INTERNAL_ERROR", details: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }

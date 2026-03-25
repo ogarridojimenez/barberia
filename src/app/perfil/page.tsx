@@ -2,12 +2,15 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { fetchApi, apiGet } from "@/lib/auth/client";
+import { ImageUpload } from "@/components/ui";
 
 interface User {
   id: string;
   email: string;
   nombre?: string;
+  apellidos?: string;
   telefono?: string;
+  foto_url?: string;
   created_at?: string;
 }
 
@@ -20,7 +23,9 @@ export default function PerfilPage() {
 
   // Campos de perfil
   const [nombre, setNombre] = useState("");
+  const [apellidos, setApellidos] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [fotoUrl, setFotoUrl] = useState("");
 
   // Campos de contraseña
   const [currentPassword, setCurrentPassword] = useState("");
@@ -36,7 +41,9 @@ export default function PerfilPage() {
       const data = await apiGet<{ user: User }>("/api/me");
       setUser(data.user);
       setNombre(data.user.nombre || "");
+      setApellidos(data.user.apellidos || "");
       setTelefono(data.user.telefono || "");
+      setFotoUrl(data.user.foto_url || "");
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,7 +59,7 @@ export default function PerfilPage() {
     try {
       const res = await fetchApi("/api/me", {
         method: "PUT",
-        body: JSON.stringify({ nombre, telefono }),
+        body: JSON.stringify({ nombre, apellidos, telefono, foto_url: fotoUrl }),
       });
 
       const data = await res.json();
@@ -158,22 +165,44 @@ export default function PerfilPage() {
         </h2>
 
         <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Foto de perfil */}
+          <ImageUpload
+            label="Foto de perfil"
+            value={fotoUrl}
+            onChange={setFotoUrl}
+          />
+
+          {/* Nombre y Apellidos */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Nombre</label>
+              <input
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Tu nombre"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Apellidos</label>
+              <input
+                type="text"
+                value={apellidos}
+                onChange={(e) => setApellidos(e.target.value)}
+                placeholder="Tus apellidos"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          {/* Email */}
           <div>
             <label style={labelStyle}>Email</label>
             <input type="email" value={user?.email || ""} disabled style={{ ...inputStyle, color: "#71717A" }} />
           </div>
 
-          <div>
-            <label style={labelStyle}>Nombre</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Tu nombre completo"
-              style={inputStyle}
-            />
-          </div>
-
+          {/* Teléfono */}
           <div>
             <label style={labelStyle}>Teléfono</label>
             <input
@@ -185,6 +214,7 @@ export default function PerfilPage() {
             />
           </div>
 
+          {/* Miembro desde */}
           {user?.created_at && (
             <div>
               <label style={labelStyle}>Miembro desde</label>
