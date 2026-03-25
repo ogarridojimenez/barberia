@@ -72,33 +72,65 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { nombre, apellidos, telefono, foto_url } = body;
 
-    // Validaciones básicas
-    if (nombre && typeof nombre !== "string") {
-      return NextResponse.json(
-        { error: "INVALID_INPUT", message: "Nombre debe ser texto" },
-        { status: 400 }
-      );
+    // Validaciones con longitud máxima para prevenir DoS
+    if (nombre !== undefined) {
+      if (typeof nombre !== "string") {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Nombre debe ser texto" },
+          { status: 400 }
+        );
+      }
+      if (nombre.length > 100) {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Nombre máximo 100 caracteres" },
+          { status: 400 }
+        );
+      }
     }
 
-    if (apellidos && typeof apellidos !== "string") {
-      return NextResponse.json(
-        { error: "INVALID_INPUT", message: "Apellidos debe ser texto" },
-        { status: 400 }
-      );
+    if (apellidos !== undefined) {
+      if (typeof apellidos !== "string") {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Apellidos debe ser texto" },
+          { status: 400 }
+        );
+      }
+      if (apellidos.length > 100) {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Apellidos máximo 100 caracteres" },
+          { status: 400 }
+        );
+      }
     }
 
-    if (telefono && typeof telefono !== "string") {
-      return NextResponse.json(
-        { error: "INVALID_INPUT", message: "Teléfono debe ser texto" },
-        { status: 400 }
-      );
+    if (telefono !== undefined) {
+      if (typeof telefono !== "string") {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Teléfono debe ser texto" },
+          { status: 400 }
+        );
+      }
+      if (telefono.length > 20) {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Teléfono máximo 20 caracteres" },
+          { status: 400 }
+        );
+      }
     }
 
-    if (foto_url && typeof foto_url !== "string") {
-      return NextResponse.json(
-        { error: "INVALID_INPUT", message: "URL de foto inválida" },
-        { status: 400 }
-      );
+    if (foto_url !== undefined) {
+      if (typeof foto_url !== "string") {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "URL de foto inválida" },
+          { status: 400 }
+        );
+      }
+      if (foto_url.length > 500) {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "URL de foto máximo 500 caracteres" },
+          { status: 400 }
+        );
+      }
     }
 
     const supabase = createSupabaseAdminClient();

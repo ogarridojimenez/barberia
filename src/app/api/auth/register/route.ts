@@ -6,6 +6,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit, getIpFromRequest } from "@/lib/rate-limit";
 import { internalError } from "@/lib/api-errors";
 
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "12", 10);
+
 const RegisterSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     const { data: user, error } = await supabase
       .from("app_users")

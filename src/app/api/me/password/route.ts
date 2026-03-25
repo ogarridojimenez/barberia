@@ -3,9 +3,12 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { verifyAuthToken, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { internalError } from "@/lib/api-errors";
+
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "12", 10);
 
 const ChangePasswordSchema = z.object({
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().min(1).max(72),
   newPassword: z
     .string()
     .min(8, "La contraseña debe tener al menos 8 caracteres")
@@ -67,7 +70,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Hash nueva contraseña
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    const newPasswordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
     // Actualizar contraseña
     const { error: updateError } = await supabase
@@ -77,19 +80,13 @@ export async function PUT(req: NextRequest) {
 
     if (updateError) {
       return NextResponse.json(
-        { error: "DB_ERROR", details: updateError.message },
+        { error: "DB_ERROR", message: "Error al actualizar contraseña" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ message: "Contraseña actualizada correctamente" });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }
