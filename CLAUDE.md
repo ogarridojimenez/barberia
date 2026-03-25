@@ -4,105 +4,172 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev` - Start development server on http://localhost:3000
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+```bash
+npm run dev          # Start dev server on http://localhost:3000
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run test         # Run unit tests (Vitest)
+npm run test:watch   # Run tests in watch mode
+```
+
+### Run Single Test
+```bash
+npx vitest run src/__tests__/jwt.test.ts
+```
+
+### E2E Tests
+```bash
+npx playwright test                    # All tests
+npx playwright test e2e/login.spec.ts  # Single file
+```
 
 ## Project Overview
 
-A barbershop management application built with Next.js 16.2.0, React 19.2.4, TypeScript, and Supabase. Uses JWT-based authentication with bcrypt password hashing.
+A barbershop management application built with Next.js 15.3.3, React, TypeScript, and Supabase. Uses JWT-based authentication with bcrypt password hashing. Three roles: Admin, Barbero (barber), Cliente (client).
 
 ## Architecture
-
-### Framework Notes
-
-**Next.js 16.2.0 has breaking changes** — APIs, conventions, and file structure differ from earlier versions. Consult `node_modules/next/dist/docs/` for accurate reference. This applies especially to:
-- Async cookies/headers APIs
-- Route handlers in App Router
-- SSR patterns with `@supabase/ssr`
 
 ### Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
+├── app/
 │   ├── api/
-│   │   ├── login/route.ts      # POST /api/login - JWT auth
-│   │   └── register/route.ts   # POST /api/register - user creation
-│   ├── login/
-│   │   └── page.tsx            # Client login form
-│   ├── register/
-│   │   └── page.tsx            # Client registration form
-│   ├── dashboard/
-│   │   └── page.tsx            # Protected dashboard with logout
-│   ├── layout.tsx              # Root layout with Geist font
-│   ├── page.tsx                # Home page with auth links
-│   └── globals.css             # Tailwind v4 imports
+│   │   ├── auth/
+│   │   │   ├── login/route.ts     # POST login with JWT
+│   │   │   ├── register/route.ts  # POST register user
+│   │   │   └── logout/route.ts    # POST logout
+│   │   ├── citas/
+│   │   │   ├── route.ts           # GET/POST citas
+│   │   │   └── [id]/route.ts      # PUT update cita status
+│   │   ├── admin/
+│   │   │   ├── stats/route.ts     # GET admin dashboard stats
+│   │   │   ├── citas/route.ts     # GET all citas
+│   │   │   ├── barberos/route.ts  # CRUD barberos
+│   │   │   ├── servicios/route.ts # CRUD servicios
+│   │   │   └── usuarios/route.ts  # Manage user roles
+│   │   ├── barberos/
+│   │   │   ├── route.ts           # GET active barbers
+│   │   │   ├── citas/route.ts     # GET barber's citas
+│   │   │   └── [id]/horarios/     # GET available slots
+│   │   ├── dashboard/
+│   │   │   └── stats/route.ts     # GET client stats
+│   │   └── me/
+│   │       ├── route.ts           # GET/PUT user profile
+│   │       └── password/route.ts  # PUT change password
+│   ├── admin/                     # Admin pages
+│   ├── barbero/                   # Barber page
+│   ├── dashboard/                 # Client dashboard
+│   ├── citas/                     # Appointments pages
+│   ├── perfil/                    # User profile
+│   ├── login/                     # Login page
+│   └── register/                  # Register page
+├── components/
+│   └── ui/                        # Reusable components
+│       ├── Button.tsx             # 4 variants, 3 sizes
+│       ├── Card.tsx               # Card with header/footer
+│       ├── Modal.tsx              # Modal with overlay
+│       ├── Input.tsx              # Input with label/error
+│       ├── Badge.tsx              # 5 variants
+│       ├── Select.tsx             # Select with label
+│       └── Skeleton.tsx           # Loading skeletons
 ├── lib/
 │   ├── auth/
-│   │   ├── jwt.ts              # JWT signing (server-only)
-│   │   └── client.ts           # Client-side auth (localStorage)
-│   └── supabase/
-│       ├── admin.ts            # Service role client (server-only)
-│       ├── server.ts           # SSR client with cookie handling
-│       └── browser.ts          # Browser client
-└── supabase/                 # SQL migrations
-    ├── 001_app_users.sql
-    └── 002_add_password_hash_column.sql
+│   │   ├── jwt.ts                 # JWT sign/verify, role helpers
+│   │   ├── client.ts              # Client auth (apiGet, fetchApi)
+│   │   └── middleware.ts          # withAuth() wrapper
+│   ├── supabase/
+│   │   ├── admin.ts               # Service role client (server-only)
+│   │   ├── server.ts              # SSR client
+│   │   └── browser.ts             # Browser client
+│   ├── api-errors.ts              # internalError(), dbError() helpers
+│   ├── constants.ts               # estadoCitaMap, roleMap, horarios
+│   └── rate-limit.ts              # Upstash Redis rate limiting
+└── __tests__/                     # Vitest unit tests
 ```
-
-### Authentication Architecture
-
-Three Supabase clients for different contexts:
-1. **Admin client** (`@/lib/supabase/admin`): Uses service role key for database operations in API routes. Imported with `"server-only"` directive.
-2. **Server client** (`@/lib/supabase/server`): For SSR with cookie-based session management. Handles read-only cookie store via async `cookies()`.
-3. **Browser client** (`@/lib/supabase/browser`): For client-side Supabase operations.
-
-**JWT Auth flow**: API routes validate credentials against Supabase, then issue signed JWT tokens using `jsonwebtoken`. Tokens include `sub` (user id) and `email`.
-
-**Client-side auth** (`@/lib/auth/client`): Utilities for browser-side auth:
-- `saveToken(token)` / `getToken()` / `removeToken()` - localStorage operations
-- `login(email, password)` - POST to `/api/login`, stores token on success
-- `register(email, password)` - POST to `/api/register`, stores token on success
-- `logout()` - removes token and redirects to `/login`
-- `isAuthenticated()` - checks if token exists in localStorage
-
-**Auth pages**:
-- `/login` - Client form with email/password, redirects to `/dashboard` on success
-- `/register` - Client form with email/password/confirm, redirects to `/dashboard` on success
-- `/dashboard` - Protected page (client-side auth check), displays logout button
 
 ### Key Patterns
 
-- **Path alias**: `@/*` maps to `./src/*` (configured in tsconfig.json)
-- **Server-only code**: Files using server secrets import `"server-only"` to prevent accidental client bundling
-- **Validation**: Zod schemas for API input validation (see `LoginSchema` and `RegisterSchema` in route files)
-- **Error handling**: API routes return JSON with structured error codes (`INVALID_JSON`, `INVALID_INPUT`, `DB_SCHEMA_ERROR`, `EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`)
-- **Bcrypt**: Password hashing with `bcrypt.hash(password, 10)` and `bcrypt.compare()`
+**Auth wrapper** (reduces boilerplate):
+```typescript
+import { withAuth } from "@/lib/auth/middleware";
+
+export const GET = withAuth(async (req, ctx, payload) => {
+  // payload is verified JWT
+  return NextResponse.json({ data: "ok" });
+}, { requireAdmin: true }); // Optional: requireAdmin, requireBarbero
+```
+
+**Get token from request** (checks header then cookie):
+```typescript
+import { getTokenFromRequest } from "@/lib/auth/jwt";
+
+const token = getTokenFromRequest(req);
+```
+
+**Safe error responses** (no details in production):
+```typescript
+import { internalError } from "@/lib/api-errors";
+
+catch (err) {
+  return internalError(err);
+}
+```
+
+**API response pattern**:
+```typescript
+// Success
+return NextResponse.json({ data });
+
+// Error
+return NextResponse.json({ error: "ERROR_CODE", message: "..." }, { status: 400 });
+```
 
 ### Database Schema
 
-Table `public.app_users`:
-- `id`: uuid primary key
-- `email`: text (unique, case-insensitive via `ilike` queries)
-- `password_hash`: text (bcrypt)
-- `created_at`: timestamptz
+**app_users**: id, email, password_hash, nombre, telefono, user_role, created_at
+**barberos**: id, nombre, especialidad, telefono, foto_url, activo
+**servicios**: id, nombre, descripcion, duracion_minutos, precio, activo
+**citas**: id, usuario_id, barbero_id, servicio_id, fecha, hora_inicio, hora_fin, estado, notas
+**horarios_disponibles**: id, barbero_id, fecha, hora_inicio, hora_fin, disponible, cita_id
 
-### Environment Variables
+### Cita Estados
+
+- `activa`: Cita pendiente
+- `cancelada`: Cita cancelada
+- `completada`: Cita completada (solo admin/barbero pueden marcar)
+
+### Migrations
+
+Located in `supabase/`:
+- `001-008`: Base schema
+- `009_add_completada_estado.sql`: Adds "completada" to enum
+- `010_rls_policies.sql`: RLS policies (prepared but not active)
+- `011_unique_cita_slot.sql`: Unique index to prevent double booking
+- `012_add_nombre_telefono.sql`: Profile fields
+
+## Code Style
+
+- **Path alias**: `@/*` → `./src/*`
+- **Server-only**: Files with `"server-only"` import
+- **Components**: "use client" only when needed
+- **Inline styles**: Dark theme (#18181B bg, #D4AF37 gold accent)
+- **Error codes**: English (MISSING_TOKEN, FORBIDDEN), user messages: Spanish
+
+## Environment Variables
 
 Required in `.env.local`:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `JWT_SECRET`
-- `JWT_EXPIRES_IN` (optional, defaults to "7d")
+- `JWT_SECRET` (generate with `openssl rand -base64 48`)
 
-### Dependencies
+## Dependencies
 
-- `@supabase/ssr` and `@supabase/supabase-js` for database
+- `jose` for JWT (not jsonwebtoken)
 - `bcryptjs` for password hashing
-- `jsonwebtoken` for tokens
 - `zod` for validation
-- `tailwindcss` v4 with `@import "tailwindcss"` syntax
-- `next/font` with Geist font family
+- `tailwindcss` v4 with `@import "tailwindcss"`
+- `vitest` for unit tests
+- `@playwright/test` for E2E tests
