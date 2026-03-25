@@ -45,6 +45,9 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
   return (
     <div
       ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? "modal-title" : undefined}
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
@@ -81,11 +84,12 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
               alignItems: "center",
             }}
           >
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: "#FAFAFA", margin: 0 }}>
+            <h2 id="modal-title" style={{ fontSize: 18, fontWeight: 600, color: "#FAFAFA", margin: 0 }}>
               {title}
             </h2>
             <button
               onClick={onClose}
+              aria-label="Cerrar"
               style={{
                 background: "transparent",
                 border: "none",

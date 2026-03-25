@@ -6,3 +6,4 @@ export { Badge } from "./Badge";
 export { Select } from "./Select";
 export { Skeleton, SkeletonCard, SkeletonTable, SkeletonForm } from "./Skeleton";
 export { Pagination } from "./Pagination";
+export { EmptyState, EmptyCitasIcon, EmptyUsersIcon, EmptyServiciosIcon } from "./EmptyState";

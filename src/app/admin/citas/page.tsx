@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchApi } from "@/lib/auth/client";
-import { Pagination } from "@/components/ui";
+import { Pagination, EmptyState, EmptyCitasIcon } from "@/components/ui";
 
 interface Barbero {
   id: string;
@@ -235,7 +235,13 @@ export default function AdminCitasPage() {
             })}
           </tbody>
         </table>
-        {citas.length === 0 && <div style={{ padding: 48, textAlign: "center", color: "#71717A" }}>No hay citas para mostrar</div>}
+        {citas.length === 0 && (
+          <EmptyState
+            icon={<EmptyCitasIcon />}
+            title="No hay citas"
+            description="No se encontraron citas con los filtros seleccionados"
+          />
+        )}
       </div>
 
       {/* Paginación */}

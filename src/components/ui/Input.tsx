@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, forwardRef } from "react";
+import { InputHTMLAttributes, forwardRef, useId } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -6,11 +6,16 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, style, ...props }, ref) => {
+  ({ label, error, style, id, ...props }, ref) => {
+    const generatedId = useId();
+    const inputId = id || generatedId;
+    const errorId = error ? `${inputId}-error` : undefined;
+
     return (
       <div style={{ width: "100%" }}>
         {label && (
           <label
+            htmlFor={inputId}
             style={{
               display: "block",
               fontSize: 12,
@@ -26,6 +31,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           ref={ref}
+          id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           style={{
             width: "100%",
             padding: "12px 14px",
@@ -42,6 +50,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         />
         {error && (
           <p
+            id={errorId}
+            role="alert"
             style={{
               marginTop: 6,
               fontSize: 12,

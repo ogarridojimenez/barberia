@@ -1,4 +1,4 @@
-import { SelectHTMLAttributes, forwardRef } from "react";
+import { SelectHTMLAttributes, forwardRef, useId } from "react";
 
 interface SelectOption {
   value: string;
@@ -13,11 +13,16 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, style, ...props }, ref) => {
+  ({ label, error, options, placeholder, style, id, ...props }, ref) => {
+    const generatedId = useId();
+    const selectId = id || generatedId;
+    const errorId = error ? `${selectId}-error` : undefined;
+
     return (
       <div style={{ width: "100%" }}>
         {label && (
           <label
+            htmlFor={selectId}
             style={{
               display: "block",
               fontSize: 12,
@@ -33,6 +38,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         )}
         <select
           ref={ref}
+          id={selectId}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           style={{
             width: "100%",
             padding: "12px 14px",
@@ -64,6 +72,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </select>
         {error && (
           <p
+            id={errorId}
+            role="alert"
             style={{
               marginTop: 6,
               fontSize: 12,

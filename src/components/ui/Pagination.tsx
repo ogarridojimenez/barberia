@@ -86,10 +86,11 @@ export function Pagination({
         </span>
       )}
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <nav aria-label="Paginación" style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          aria-label="Página anterior"
           style={{
             ...buttonStyle(false),
             opacity: currentPage === 1 ? 0.5 : 1,
@@ -103,6 +104,7 @@ export function Pagination({
           typeof page === "string" ? (
             <span
               key={`ellipsis-${index}`}
+              aria-hidden="true"
               style={{ color: "#71717A", padding: "0 4px" }}
             >
               {page}
@@ -111,6 +113,8 @@ export function Pagination({
             <button
               key={page}
               onClick={() => onPageChange(page)}
+              aria-label={`Ir a página ${page}`}
+              aria-current={page === currentPage ? "page" : undefined}
               style={buttonStyle(page === currentPage)}
             >
               {page}
@@ -121,6 +125,7 @@ export function Pagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          aria-label="Página siguiente"
           style={{
             ...buttonStyle(false),
             opacity: currentPage === totalPages ? 0.5 : 1,
@@ -129,7 +134,7 @@ export function Pagination({
         >
           Siguiente
         </button>
-      </div>
+      </nav>
     </div>
   );
 }

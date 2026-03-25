@@ -10,10 +10,11 @@ export default function Home() {
           position: "absolute",
           inset: 0,
           background: `
-            linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.8) 100%),
-            url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1920&q=80') center/cover no-repeat
+            linear-gradient(135deg, rgba(24,24,27,1) 0%, rgba(39,39,42,0.95) 50%, rgba(24,24,27,1) 100%),
+            radial-gradient(ellipse at 20% 50%, rgba(212,175,55,0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(212,175,55,0.1) 0%, transparent 40%)
           `,
-          backgroundColor: "#1a1a1a",
+          backgroundColor: "#18181B",
         }}
       />
 
