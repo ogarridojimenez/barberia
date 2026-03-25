@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/auth/client";
+import { Skeleton, SkeletonCard } from "@/components/ui";
 
 interface User {
   id: string;
@@ -41,8 +42,29 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: 64 }}>
-        <span style={{ color: "#71717A" }}>Cargando...</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+        {/* Skeleton para saludo */}
+        <div>
+          <Skeleton width="40%" height={28} style={{ marginBottom: 8 }} />
+          <Skeleton width="30%" height={15} />
+        </div>
+
+        {/* Skeleton para stats cards */}
+        <div className="grid-stats">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+
+        {/* Skeleton para acciones rápidas */}
+        <div>
+          <Skeleton width="20%" height={16} style={{ marginBottom: 16 }} />
+          <div className="grid-quick-actions">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
       </div>
     );
   }
@@ -108,13 +130,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-        }}
-      >
+      <div className="grid-stats">
         {statsCards.map((stat) => (
           <Link
             key={stat.label}
@@ -167,13 +183,7 @@ export default function DashboardPage() {
         >
           Acciones rápidas
         </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 16,
-          }}
-        >
+        <div className="grid-quick-actions">
           {quickActions.map((action) => (
             <Link
               key={action.title}

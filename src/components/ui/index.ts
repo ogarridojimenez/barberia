@@ -4,3 +4,4 @@ export { Modal, ModalFooter } from "./Modal";
 export { Input } from "./Input";
 export { Badge } from "./Badge";
 export { Select } from "./Select";
+export { Skeleton, SkeletonCard, SkeletonTable, SkeletonForm } from "./Skeleton";

@@ -71,7 +71,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      <div className="grid-admin-stats">
         {metricCards.map((card) => (
           <div
             key={card.label}
