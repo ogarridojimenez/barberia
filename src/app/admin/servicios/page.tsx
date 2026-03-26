@@ -339,8 +339,9 @@ export default function AdminServiciosPage() {
 
       {/* Modal de crear/editar */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingServicio ? "Editar Servicio" : "Nuevo Servicio"}>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 8 }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Input
               label="Nombre *"
               type="text"
@@ -396,7 +397,8 @@ export default function AdminServiciosPage() {
               {editingServicio ? "Guardar" : "Crear Servicio"}
             </Button>
           </ModalFooter>
-        </form>
+          </form>
+        </div>
       </Modal>
 
       {/* Modal de confirmación de eliminación */}

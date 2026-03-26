@@ -30,6 +30,15 @@ const roleOptions = [
   { value: "admin", label: "Admin" },
 ];
 
+const specialtyOptions = [
+  { value: "Corte de cabello", label: "Corte de cabello" },
+  { value: "Barba y afeitado", label: "Barba y afeitado" },
+  { value: "Corte y barba", label: "Corte y barba" },
+  { value: "Tratamientos capilares", label: "Tratamientos capilares" },
+  { value: "Coloración", label: "Coloración" },
+  { value: "Arreglo de cejas", label: "Arreglo de cejas" },
+];
+
 const roleColors: Record<string, { bg: string; text: string }> = {
   admin: { bg: "rgba(167, 139, 250, 0.1)", text: "#A78BFA" },
   barbero: { bg: "rgba(34, 197, 94, 0.1)", text: "#22C55E" },
@@ -65,6 +74,22 @@ export default function AdminUsuariosPage() {
   const [newApellidos, setNewApellidos] = useState("");
   const [newTelefono, setNewTelefono] = useState("");
   const [newUserRole, setNewUserRole] = useState("cliente");
+  const [newEspecialidad, setNewEspecialidad] = useState("");
+
+  function resetCreateForm() {
+    setNewEmail("");
+    setNewPassword("");
+    setNewNombre("");
+    setNewApellidos("");
+    setNewTelefono("");
+    setNewUserRole("cliente");
+    setNewEspecialidad("");
+  }
+
+  function openCreateModal() {
+    resetCreateForm();
+    setShowCreateModal(true);
+  }
 
   useEffect(() => {
     fetchUsuarios();
@@ -195,6 +220,7 @@ export default function AdminUsuariosPage() {
           apellidos: newApellidos || undefined,
           telefono: newTelefono || undefined,
           user_role: newUserRole,
+          especialidad: newUserRole === "barbero" ? newEspecialidad : undefined,
         }),
       });
 
@@ -203,12 +229,7 @@ export default function AdminUsuariosPage() {
       if (res.ok) {
         setMensaje({ type: "success", text: "Usuario creado correctamente" });
         setShowCreateModal(false);
-        setNewEmail("");
-        setNewPassword("");
-        setNewNombre("");
-        setNewApellidos("");
-        setNewTelefono("");
-        setNewUserRole("cliente");
+        resetCreateForm();
         fetchUsuarios();
       } else {
         setMensaje({ type: "error", text: data.message || data.error || "Error al crear usuario" });
@@ -521,33 +542,34 @@ export default function AdminUsuariosPage() {
       </Modal>
 
       {/* Modal de creación de usuario */}
-      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Crear Usuario" size="lg">
-        <form onSubmit={handleCreateUser}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Modal isOpen={showCreateModal} title="Crear Usuario" size="lg">
+        <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 8 }}>
+          <form onSubmit={handleCreateUser}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <Input
+                  label="Nombre"
+                  type="text"
+                  value={newNombre}
+                  onChange={(e) => setNewNombre(e.target.value)}
+                  placeholder="Nombre"
+                />
+                <Input
+                  label="Apellidos"
+                  type="text"
+                  value={newApellidos}
+                  onChange={(e) => setNewApellidos(e.target.value)}
+                  placeholder="Apellidos"
+                />
+              </div>
               <Input
-                label="Nombre"
-                type="text"
-                value={newNombre}
-                onChange={(e) => setNewNombre(e.target.value)}
-                placeholder="Nombre"
+                label="Email *"
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="email@ejemplo.com"
+                required
               />
-              <Input
-                label="Apellidos"
-                type="text"
-                value={newApellidos}
-                onChange={(e) => setNewApellidos(e.target.value)}
-                placeholder="Apellidos"
-              />
-            </div>
-            <Input
-              label="Email *"
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="email@ejemplo.com"
-              required
-            />
             <div>
               <Input
                 label="Contraseña *"
@@ -572,16 +594,25 @@ export default function AdminUsuariosPage() {
               onChange={(e) => setNewUserRole(e.target.value)}
               options={roleOptions}
             />
+            {newUserRole === "barbero" && (
+              <Select
+                label="Especialidad *"
+                value={newEspecialidad}
+                onChange={(e) => setNewEspecialidad(e.target.value)}
+                options={specialtyOptions}
+              />
+            )}
           </div>
           <ModalFooter>
-            <Button variant="ghost" onClick={() => setShowCreateModal(false)}>
+            <Button variant="ghost" onClick={() => { resetCreateForm(); setShowCreateModal(false); }}>
               Cancelar
             </Button>
             <Button type="submit" loading={creating}>
               Crear Usuario
             </Button>
           </ModalFooter>
-        </form>
+          </form>
+        </div>
       </Modal>
     </div>
   );

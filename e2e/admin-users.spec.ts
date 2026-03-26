@@ -309,6 +309,29 @@ test.describe("Admin Users - Create User", () => {
     await expect(page.getByText("La contraseña debe tener al menos")).toBeVisible({ timeout: 5000 });
   });
 
+  test("should create user with barber role and specialty", async ({ page }) => {
+    const uniqueEmail = `e2ebarber${Date.now()}@test.com`;
+
+    await page.click("button:has-text('Nuevo Usuario')");
+    await page.waitForSelector("#modal-title");
+
+    await page.getByLabel("Nombre").fill("Juan");
+    await page.getByLabel("Email *").fill(uniqueEmail);
+    await page.getByLabel("Contraseña *").fill("password123");
+    await page.getByLabel("Rol *").selectOption("barbero");
+    await page.waitForTimeout(500);
+
+    await expect(page.getByLabel("Especialidad *")).toBeVisible();
+
+    await page.getByLabel("Especialidad *").selectOption("Corte de cabello");
+
+    await page.click('button[type="submit"]');
+
+    await expect(page.getByText("Usuario creado correctamente")).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
   test("should close modal on cancel", async ({ page }) => {
     await page.click("button:has-text('Nuevo Usuario')");
     await expect(page.locator("#modal-title")).toContainText("Crear Usuario");

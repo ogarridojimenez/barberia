@@ -4,7 +4,7 @@ import { useEffect, useRef, ReactNode } from "react";
 
 interface ModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   title?: string;
   children: ReactNode;
   size?: "sm" | "md" | "lg";
@@ -26,7 +26,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
 
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape" && isOpen && onClose) {
         onClose();
       }
     }
@@ -49,7 +49,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        if (e.target === overlayRef.current && onClose) onClose();
       }}
       style={{
         position: "fixed",

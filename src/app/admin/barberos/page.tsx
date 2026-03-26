@@ -330,8 +330,9 @@ export default function BarberosPage() {
 
       {/* Modal de crear/editar */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingBarbero ? "Editar Barbero" : "Nuevo Barbero"} size="lg">
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 8 }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Input
               label="Nombre *"
               type="text"
@@ -413,7 +414,8 @@ export default function BarberosPage() {
               {editingBarbero ? "Guardar" : "Crear Barbero"}
             </Button>
           </ModalFooter>
-        </form>
+          </form>
+        </div>
       </Modal>
 
       {/* Modal de confirmación de eliminación */}

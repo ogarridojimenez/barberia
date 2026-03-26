@@ -44,6 +44,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             color: "#FAFAFA",
             outline: "none",
             transition: "border-color 0.15s ease",
+            WebkitAppearance: "none",
+            MozAppearance: "none",
+            appearance: "none",
             ...style,
           }}
           {...props}
