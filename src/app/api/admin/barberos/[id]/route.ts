@@ -2,12 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { verifyAuthToken, verifyAdminRole, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { internalError } from "@/lib/api-errors";
 
 const UpdateBarberoSchema = z.object({
   nombre: z.string().min(1).optional(),
   especialidad: z.string().optional(),
   telefono: z.string().optional(),
-  foto_url: z.string().url().optional().or(z.literal("")),
+  foto_url: z.string().optional(),
   activo: z.boolean().optional(),
 });
 
@@ -46,8 +47,8 @@ export async function PUT(
 
     const updateData: Record<string, unknown> = {};
     if (parsed.data.nombre !== undefined) updateData.nombre = parsed.data.nombre;
-    if (parsed.data.especialidad !== undefined) updateData.especialidad = parsed.data.especialidad;
-    if (parsed.data.telefono !== undefined) updateData.telefono = parsed.data.telefono;
+    if (parsed.data.especialidad !== undefined) updateData.especialidad = parsed.data.especialidad || null;
+    if (parsed.data.telefono !== undefined) updateData.telefono = parsed.data.telefono || null;
     if (parsed.data.foto_url !== undefined) updateData.foto_url = parsed.data.foto_url || null;
     if (parsed.data.activo !== undefined) updateData.activo = parsed.data.activo;
 
@@ -57,21 +58,16 @@ export async function PUT(
       .eq("id", id);
 
     if (error) {
+      console.error("Supabase update error:", error);
       return NextResponse.json(
-        { error: "DB_ERROR", details: error.message },
+        { error: "DB_ERROR", message: "Error al actualizar el barbero" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ message: "Barbero actualizado" });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }
 
@@ -98,27 +94,39 @@ export async function DELETE(
 
     const supabase = createSupabaseAdminClient();
 
-    // Soft delete: desactivar en vez de eliminar
+    // Verificar si el barbero tiene citas asociadas
+    const { count: citasCount, error: countError } = await supabase
+      .from("citas")
+      .select("*", { count: "exact", head: true })
+      .eq("barbero_id", id);
+
+    if (countError) {
+      console.error("Error checking citas:", countError);
+    }
+
+    if (citasCount && citasCount > 0) {
+      return NextResponse.json(
+        { error: "HAS_CITAS", message: "No se puede eliminar el barbero porque tiene citas asociadas. Desactívalo en su lugar." },
+        { status: 400 }
+      );
+    }
+
+    // Hard delete: eliminar completamente el registro
     const { error } = await supabase
       .from("barberos")
-      .update({ activo: false })
+      .delete()
       .eq("id", id);
 
     if (error) {
+      console.error("Supabase delete error:", error);
       return NextResponse.json(
-        { error: "DB_ERROR", details: error.message },
+        { error: "DB_ERROR", message: "Error al eliminar el barbero" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ message: "Barbero desactivado" });
+    return NextResponse.json({ message: "Barbero eliminado correctamente" });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: "INTERNAL_ERROR",
-        details: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    return internalError(err);
   }
 }

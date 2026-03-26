@@ -30,14 +30,14 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role") || "";
 
-    // Construir query base
+    // Construir query base - incluye todos los campos
     let query = supabase
       .from("app_users")
-      .select("id, email, nombre, apellidos, telefono, foto_url, user_role, created_at", { count: "exact" });
+      .select("id, email, user_role, created_at, nombre, foto_url, telefono, especialidad", { count: "exact" });
 
-    // Aplicar filtro de búsqueda (nombre o email)
+    // Aplicar filtro de búsqueda (email o nombre)
     if (search) {
-      query = query.or(`nombre.ilike.%${search}%,email.ilike.%${search}%,apellidos.ilike.%${search}%`);
+      query = query.or(`email.ilike.%${search}%,nombre.ilike.%${search}%`);
     }
 
     // Aplicar filtro de rol
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       query = query.eq("user_role", role);
     }
 
-    // Obtener datos paginados
+    // Obtener usuarios con filtros aplicados
     const { data: usuarios, error, count } = await query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -57,11 +57,36 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Para barberos, obtener datos adicionales de la tabla barberos
+    const usuariosConDatos = await Promise.all(
+      (usuarios || []).map(async (usuario) => {
+        if (usuario.user_role === "barbero") {
+          const { data: barbero } = await supabase
+            .from("barberos")
+            .select("nombre, foto_url, telefono, especialidad")
+            .eq("user_id", usuario.id)
+            .limit(1)
+            .single();
+          
+          if (barbero) {
+            return {
+              ...usuario,
+              nombre: barbero.nombre || usuario.nombre,
+              foto_url: barbero.foto_url || usuario.foto_url,
+              telefono: barbero.telefono || usuario.telefono,
+              especialidad: barbero.especialidad || usuario.especialidad,
+            };
+          }
+        }
+        return usuario;
+      })
+    );
+
     const totalItems = count || 0;
     const totalPages = Math.ceil(totalItems / limit);
 
     return NextResponse.json({
-      usuarios: usuarios || [],
+      usuarios: usuariosConDatos,
       pagination: {
         page,
         limit,

@@ -7,12 +7,12 @@ import { Modal, ModalFooter, Button, Input, Select, Pagination, TableWrapper, Em
 interface Usuario {
   id: string;
   email: string;
-  nombre?: string;
-  apellidos?: string;
-  telefono?: string;
-  foto_url?: string;
   user_role: string;
   created_at: string;
+  nombre: string | null;
+  foto_url: string | null;
+  telefono: string | null;
+  especialidad: string | null;
 }
 
 interface PaginationData {
@@ -278,7 +278,7 @@ export default function AdminUsuariosPage() {
       >
         <div>
           <label style={{ display: "block", fontSize: 12, color: "#A1A1AA", marginBottom: 6, fontWeight: 500 }}>
-            Buscar por nombre o email
+            Buscar por email
           </label>
           <input
             type="text"
@@ -329,7 +329,7 @@ export default function AdminUsuariosPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #27272A", background: "#27272A" }}>
-                {["Usuario", "Email", "Teléfono", "Rol", "Registrado", "Acciones"].map((h) => (
+                {["Usuario", "Email", "Rol", "Registrado", "Acciones"].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -347,35 +347,53 @@ export default function AdminUsuariosPage() {
                 ))}
               </tr>
             </thead>
-            <tbody>
+              <tbody>
               {usuarios.map((user) => {
                 const roleColor = roleColors[user.user_role] || roleColors.cliente;
-                const fullName = [user.nombre, user.apellidos].filter(Boolean).join(" ") || "Sin nombre";
+                const displayInitial = (user.nombre || user.email).charAt(0).toUpperCase();
                 return (
                   <tr key={user.id} style={{ borderBottom: "1px solid #27272A" }}>
                     <td style={{ padding: "16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "50%",
-                            background: roleColor.bg,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: roleColor.text,
-                          }}
-                        >
-                          {fullName.charAt(0).toUpperCase()}
+                        {user.foto_url ? (
+                          <img
+                            src={user.foto_url}
+                            alt={user.nombre || user.email}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              background: roleColor.bg,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 14,
+                              fontWeight: 600,
+                              color: roleColor.text,
+                            }}
+                          >
+                            {displayInitial}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontSize: 14, fontWeight: 500, color: "#FAFAFA" }}>
+                            {user.nombre || "Sin nombre"}
+                          </span>
                         </div>
-                        <span style={{ fontSize: 14, color: "#FAFAFA" }}>{fullName}</span>
                       </div>
                     </td>
-                    <td style={{ padding: "16px", fontSize: 14, color: "#A1A1AA" }}>{user.email}</td>
-                    <td style={{ padding: "16px", fontSize: 14, color: "#A1A1AA" }}>{user.telefono || "-"}</td>
+                    <td style={{ padding: "16px" }}>
+                      <span style={{ fontSize: 14, color: "#A1A1AA" }}>{user.email}</span>
+                    </td>
                     <td style={{ padding: "16px" }}>
                       <span
                         style={{
@@ -397,7 +415,7 @@ export default function AdminUsuariosPage() {
                       <div style={{ display: "flex", gap: 8 }}>
                         <button
                           onClick={() => openRoleModal(user)}
-                          aria-label={`Cambiar rol de ${fullName}`}
+                          aria-label={`Cambiar rol de ${user.email}`}
                           style={{
                             fontSize: 12,
                             color: "#D4AF37",
@@ -412,7 +430,7 @@ export default function AdminUsuariosPage() {
                         </button>
                         <button
                           onClick={() => openDeleteModal(user)}
-                          aria-label={`Eliminar ${fullName}`}
+                          aria-label={`Eliminar ${user.email}`}
                           style={{
                             fontSize: 12,
                             color: "#FCA5A5",

@@ -98,10 +98,23 @@ export async function DELETE(
 
     const supabase = createSupabaseAdminClient();
 
-    // Soft delete: desactivar en vez de eliminar
+    // Verificar si hay citas asociadas
+    const { count } = await supabase
+      .from("citas")
+      .select("*", { count: "exact", head: true })
+      .eq("servicio_id", id)
+      .eq("estado", "activa");
+
+    if (count && count > 0) {
+      return NextResponse.json(
+        { error: "HAS_APPOINTMENTS", message: "No se puede eliminar: hay citas activas asociadas a este servicio" },
+        { status: 409 }
+      );
+    }
+
     const { error } = await supabase
       .from("servicios")
-      .update({ activo: false })
+      .delete()
       .eq("id", id);
 
     if (error) {
@@ -111,7 +124,7 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ message: "Servicio desactivado" });
+    return NextResponse.json({ message: "Servicio eliminado" });
   } catch (err) {
     return NextResponse.json(
       {
