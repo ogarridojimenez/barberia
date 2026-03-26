@@ -6,7 +6,7 @@ Guidance for AI coding agents working in this repository.
 
 ```bash
 npm run dev          # Start dev server (http://localhost:3000)
-npm run build        # Production build
+npm run build        # Production build (recommended)
 npm run start        # Start production server
 npm run lint         # Run ESLint
 
@@ -18,7 +18,10 @@ npx vitest run src/__tests__/jwt.test.ts  # Single test file
 # E2E tests (Playwright)
 npx playwright test                    # Run all E2E tests
 npx playwright test e2e/login.spec.ts  # Single E2E file
+npx playwright test --grep "filter"    # Tests matching pattern
 ```
+
+**Important**: Use production build (`npm run build && npm run start`) instead of dev server for testing. Dev server has issues with dynamic routes (`[id]`). E2E tests use `e2e/global-setup.ts` for authentication state.
 
 ## Architecture
 
@@ -138,7 +141,7 @@ try {
 Available in `@/components/ui`:
 
 ```typescript
-import { Button, Card, Modal, Input, Badge, Select, Skeleton } from "@/components/ui";
+import { Button, Card, Modal, Input, Badge, Select, Skeleton, Pagination, PasswordStrength } from "@/components/ui";
 
 // Button - 4 variants: primary, secondary, danger, ghost
 <Button variant="primary" size="md" loading={isLoading}>Guardar</Button>
