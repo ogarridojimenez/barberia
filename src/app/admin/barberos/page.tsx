@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, FormEvent } from "react";
 import { fetchApi } from "@/lib/auth/client";
-import { Button, Modal, ModalFooter, Input, TableWrapper, EmptyState, EmptyServiciosIcon } from "@/components/ui";
+import { Button, Modal, ModalFooter, Input, TableWrapper, EmptyState } from "@/components/ui";
 
 interface Barbero {
   id: string;
@@ -23,6 +23,8 @@ export default function BarberosPage() {
   const [editingBarbero, setEditingBarbero] = useState<Barbero | null>(null);
   const [saving, setSaving] = useState(false);
   const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [especialidad, setEspecialidad] = useState("");
   const [telefono, setTelefono] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -55,6 +57,8 @@ export default function BarberosPage() {
   function openCreateModal() {
     setEditingBarbero(null);
     setNombre("");
+    setEmail("");
+    setPassword("");
     setEspecialidad("");
     setTelefono("");
     setFotoUrl("");
@@ -99,9 +103,15 @@ export default function BarberosPage() {
     try {
       const url = editingBarbero ? `/api/admin/barberos/${editingBarbero.id}` : "/api/admin/barberos";
       const method = editingBarbero ? "PUT" : "POST";
+      
+      // Al crear, incluir email y password. Al editar, no enviar credenciales
+      const body = editingBarbero 
+        ? { nombre, especialidad, telefono, foto_url: fotoUrl }
+        : { nombre, email, password, especialidad, telefono, foto_url: fotoUrl };
+      
       const res = await fetchApi(url, {
         method,
-        body: JSON.stringify({ nombre, especialidad, telefono, foto_url: fotoUrl }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -341,6 +351,26 @@ export default function BarberosPage() {
               placeholder="Nombre del barbero"
               required
             />
+            {!editingBarbero && (
+              <>
+                <Input
+                  label="Email *"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@barberia.com"
+                  required
+                />
+                <Input
+                  label="Contraseña *"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+              </>
+            )}
             <Input
               label="Especialidad"
               type="text"

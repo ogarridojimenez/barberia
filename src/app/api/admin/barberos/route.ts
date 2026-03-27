@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import { verifyAuthToken, verifyAdminRole, getTokenFromRequest } from "@/lib/auth/jwt";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { internalError } from "@/lib/api-errors";
 
 const CreateBarberoSchema = z.object({
   nombre: z.string().min(1),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   especialidad: z.string().optional(),
   telefono: z.string().optional(),
   foto_url: z.string().url().optional().or(z.literal("")),
@@ -36,17 +39,31 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_PAGE_SIZE))));
     const offset = (page - 1) * limit;
 
-    // Obtener total de registros
+    // Obtener barberos desde app_users (donde user_role = 'barbero')
+    // La tabla 'barberos' es histórica, los datos principales están en app_users
     const { count } = await supabase
-      .from("barberos")
-      .select("*", { count: "exact", head: true });
+      .from("app_users")
+      .select("*", { count: "exact", head: true })
+      .eq("user_role", "barbero");
 
-    // Obtener datos paginados
-    const { data: barberos, error } = await supabase
-      .from("barberos")
-      .select("*")
+    // Obtener datos paginados - mapear campos para compatibilidad con el frontend
+    const { data: barberosData, error } = await supabase
+      .from("app_users")
+      .select("id, nombre, email, telefono, foto_url, especialidad, user_role, created_at")
+      .eq("user_role", "barbero")
       .order("nombre")
       .range(offset, offset + limit - 1);
+
+    // Mapear campos para compatibilidad con el frontend
+    const barberos = (barberosData || []).map((b) => ({
+      id: b.id,
+      nombre: b.nombre,
+      especialidad: b.especialidad,
+      telefono: b.telefono,
+      foto_url: b.foto_url,
+      email: b.email,
+      activo: true, // Los barberos en app_users siempre están activos
+    }));
 
     if (error) {
       return NextResponse.json(
@@ -102,25 +119,44 @@ export async function POST(req: NextRequest) {
 
     const supabase = createSupabaseAdminClient();
 
+    // Hashear la contraseña
+    const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+
+    // Crear el barbero en app_users con rol 'barbero'
     const { data: barbero, error } = await supabase
-      .from("barberos")
+      .from("app_users")
       .insert({
         nombre: parsed.data.nombre,
+        email: parsed.data.email,
+        password_hash: passwordHash,
+        user_role: "barbero",
         especialidad: parsed.data.especialidad || null,
         telefono: parsed.data.telefono || null,
         foto_url: parsed.data.foto_url || null,
       })
-      .select()
+      .select("id, nombre, email, telefono, foto_url, especialidad, user_role")
       .single();
 
     if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "EMAIL_ALREADY_EXISTS", message: "El email ya está registrado" },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
         { error: "DB_ERROR", details: error.message },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ barbero }, { status: 201 });
+    // Mapear para compatibilidad con frontend
+    const responseBarbero = {
+      ...barbero,
+      activo: true,
+    };
+
+    return NextResponse.json({ barbero: responseBarbero }, { status: 201 });
   } catch (err) {
     return NextResponse.json(
       {

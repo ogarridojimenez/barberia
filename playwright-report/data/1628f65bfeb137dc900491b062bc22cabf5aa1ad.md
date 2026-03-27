@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e3]:
     - generic [ref=e4]:
       - img [ref=e6]
@@ -11,12 +11,14 @@
       - generic [ref=e12]:
         - generic [ref=e13]:
           - generic [ref=e14]: Email
-          - textbox "Email" [ref=e15]:
+          - textbox "Email" [active] [ref=e15]:
             - /placeholder: tu@email.com
+            - text: notanemail
         - generic [ref=e16]:
           - generic [ref=e17]: Contraseña
           - textbox "Contraseña" [ref=e18]:
             - /placeholder: ••••••••
+            - text: password123
       - button "Iniciar sesión" [ref=e19] [cursor=pointer]
     - link "¿No tienes cuenta? Regístrate" [ref=e21] [cursor=pointer]:
       - /url: /register

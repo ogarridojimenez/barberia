@@ -45,17 +45,18 @@ export async function PUT(
 
     const supabase = createSupabaseAdminClient();
 
+    // Actualizar en app_users (los barberos están almacenados ahí con user_role = 'barbero')
     const updateData: Record<string, unknown> = {};
     if (parsed.data.nombre !== undefined) updateData.nombre = parsed.data.nombre;
     if (parsed.data.especialidad !== undefined) updateData.especialidad = parsed.data.especialidad || null;
     if (parsed.data.telefono !== undefined) updateData.telefono = parsed.data.telefono || null;
     if (parsed.data.foto_url !== undefined) updateData.foto_url = parsed.data.foto_url || null;
-    if (parsed.data.activo !== undefined) updateData.activo = parsed.data.activo;
 
     const { error } = await supabase
-      .from("barberos")
+      .from("app_users")
       .update(updateData)
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_role", "barbero");
 
     if (error) {
       console.error("Supabase update error:", error);
@@ -111,11 +112,12 @@ export async function DELETE(
       );
     }
 
-    // Hard delete: eliminar completamente el registro
+    // Hard delete: eliminar completamente el registro de app_users
     const { error } = await supabase
-      .from("barberos")
+      .from("app_users")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_role", "barbero");
 
     if (error) {
       console.error("Supabase delete error:", error);
