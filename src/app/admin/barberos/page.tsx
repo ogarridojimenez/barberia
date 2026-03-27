@@ -7,6 +7,7 @@ import { Button, Modal, ModalFooter, Input, TableWrapper, EmptyState } from "@/c
 interface Barbero {
   id: string;
   nombre: string;
+  email?: string;
   especialidad: string;
   telefono: string;
   foto_url: string;
@@ -251,7 +252,7 @@ export default function BarberosPage() {
                       <img src={barbero.foto_url} alt={barbero.nombre} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
                     ) : (
                       <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#3F3F46", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600, color: "#A1A1AA" }}>
-                        {barbero.nombre.charAt(0).toUpperCase()}
+                        {(barbero.nombre || barbero.email || "B").charAt(0).toUpperCase()}
                       </div>
                     )}
                   </td>
