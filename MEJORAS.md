@@ -11,23 +11,22 @@
 ✅ **Completado:**
 - Fase 1: Seguridad Crítica
 - Fase 2: Funcionalidad
-- Fase 3: Tests (50 pasando)
+- Fase 3: Tests (90 pasando)
 - Fase 4: Arquitectura (Componentes UI)
 - Fase 5: UX (Responsive, Skeletons, Perfil)
 - Mejoras de Impacto Medio (Paginación)
 - Mejoras de Impacto Bajo (ARIA, Empty States, CHECK constraints)
 - Registro con nombre, apellidos y foto
+- **C-1: Race Condition en Booking** - ✅ Implementado con manejo de unique constraint
+- **C-2: Admin Stats OOM** - ✅ Implementado con función SQL RPC
+- **C-3: Bcrypt Rounds** - ✅ Configurable via BCRYPT_ROUNDS (default 12)
+- **C-4: Validación Inputs** - ✅ Validación de longitud en todos los endpoints
 
 ---
 
 ## 🔴 CRÍTICO (Implementar Inmediatamente)
 
-| # | Problema | Ubicación | Solución | Impacto | Esfuerzo |
-|---|----------|-----------|----------|---------|----------|
-| C-1 | **Race Condition en Booking** - Dos requests simultáneos pueden reservar el mismo horario (TOCTOU) | `src/app/api/citas/route.ts` L109-124 | Atrapar error de unique constraint en insert y retornar error amigable | Integridad datos | Bajo |
-| C-2 | **Admin Stats OOM** - Carga TODAS las citas completadas en memoria para calcular revenue | `src/app/api/admin/stats/route.ts` | Crear función SQL que calcule revenue directamente en DB | Performance | Medio |
-| C-3 | **Bcrypt Rounds Insuficiente** - Hardcoded a 10, producción requiere 12+ | `src/app/api/auth/register/route.ts` | Variable de entorno `BCRYPT_ROUNDS` con default 12 | Seguridad | Bajo |
-| C-4 | **Sin Validación Longitud Inputs** - String fields sin `.max()` permite DoS con payloads gigantes | `src/app/api/me/route.ts`, `register/route.ts` | Agregar `.max(255)` a todos los campos string | Seguridad/Performance | Bajo |
+✅ **Todos los problemas críticos resueltos** - 2026-03-27
 
 ---
 
@@ -93,10 +92,10 @@
 
 | Métrica | Valor |
 |---------|-------|
-| Tests pasando | 50 ✅ |
-| Componentes UI | 10 |
-| Migraciones SQL | 14 |
-| API Endpoints | 18 |
+| Tests pasando | 90 ✅ |
+| Componentes UI | 12 |
+| Migraciones SQL | 17 |
+| API Endpoints | 22 |
 | Páginas | 12 |
 
 ---
@@ -105,6 +104,6 @@
 
 1. **Arquitectura sólida**: Buena separación de concerns, uso correcto de Supabase clients
 2. **Autenticación bien implementada**: JWT con httpOnly cookies, roles bien definidos
-3. **Pendiente crítico**: Race condition en booking debe resolverse antes de producción
-4. **Performance**: Admin stats necesita función SQL para escalar
-5. **Testing**: 50 tests es buen inicio, pero falta cobertura en API routes
+3. **Problemas críticos resueltos**: Race condition, Admin Stats OOM, Bcrypt rounds, validación de inputs
+4. **Performance**: Admin stats usa función SQL para escalar, caching implementado
+5. **Testing**: 90 tests pasando, coverage en API routes y auth

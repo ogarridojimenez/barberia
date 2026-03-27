@@ -29,7 +29,7 @@ async function getAuthPayload(request: NextRequest): Promise<{ payload: { role?:
   return { payload: null, hasToken: false };
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { payload, hasToken } = await getAuthPayload(request);
 

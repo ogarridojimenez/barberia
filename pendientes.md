@@ -5,7 +5,7 @@
 ### Autenticación
 - Login (`/login`) con tema oscuro premium
 - Register (`/register`) 
-- JWT con localStorage
+- JWT con cookies httpOnly
 - Redirección por rol (admin → /admin, barbero → /barbero, cliente → /dashboard)
 - Logout en todas las páginas
 
@@ -15,7 +15,7 @@
 - **Cliente**: Ver sus citas activas y canceladas, crear nuevas reservas, cancelar (+2h antes)
 
 ### Reservas
-- Estados: **Activa** y **Cancelada** (antes: pendiente, confirmada, completada)
+- Estados: **Activa**, **Cancelada** y **Completada**
 - Validación de horarios: Lun-Vie 8:00-12:00 y 14:00-18:00
 - Último horario mañana: 11:30-12:00
 - No abre domingos ni sábados
@@ -28,21 +28,29 @@
 - Landing page con imagen de fondo de barbería
 
 ### Base de Datos
-- Tabla `usuarios` con columna `rol`
-- Tabla `citas` con enum `cita_estado` (activa, cancelada)
+- Tabla `app_users` con columna `user_role` (admin, barbero, cliente)
+- Tabla `citas` con enum `estado` (activa, cancelada, completada)
 - Tabla `barberos` y `servicios`
-- Migraciones en `/supabase/`
+- 17 migraciones en `/supabase/`
+
+### Seguridad (Problemas Críticos Resueltos)
+- Race condition en booking: ✅ Manejo de unique constraint
+- Admin Stats OOM: ✅ Función SQL RPC
+- Bcrypt rounds: ✅ Configurable (default 12)
+- Validación inputs: ✅ Longitud máxima en todos los endpoints
+
+### Tests
+- 90 tests unitarios pasando (Vitest)
+- Tests E2E con Playwright
 
 ## 📋 Pendiente
 
-- Página de perfil (mejoras)
-- Componentes UI reutilizables
-- Tests
+- Mejorar cobertura de tests E2E
 
 ## Credenciales
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
 | Admin | admin@barberia.com | admin123 |
-| Barbero | barbero@barberia.com | barbero123 |
-| Cliente | cliente@test.com | password123 |
+| Barbero | barbero1@barberia.com | barbero123 |
+| Cliente | cliente1@test.com | password123 |
