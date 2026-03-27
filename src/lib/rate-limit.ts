@@ -3,10 +3,8 @@ import { Redis } from "@upstash/redis";
 let redis: Redis | null = null;
 let redisAvailable: boolean | null = null;
 
-// In-memory fallback para cuando Redis no está disponible
 const memoryStore = new Map<string, { count: number; expiresAt: number }>();
 
-// Limpiar entradas expiradas cada 5 minutos
 setInterval(() => {
   const now = Date.now();
   for (const [key, value] of memoryStore.entries()) {
@@ -47,13 +45,19 @@ export interface RateLimitResult {
   limit: number;
 }
 
-/**
- * Rate limiting con fallback a memoria cuando Redis no está disponible.
- * 
- * @param identifier - Identificador único (ej: IP, email)
- * @param limit - Máximo de requests permitidas
- * @param window - Ventana de tiempo en segundos
- */
+export type RateLimitScope = "login" | "register" | "api" | "admin";
+
+const rateLimitConfig: Record<RateLimitScope, { limit: number; window: number }> = {
+  login: { limit: 5, window: 60 },
+  register: { limit: 3, window: 300 },
+  api: { limit: 100, window: 60 },
+  admin: { limit: 30, window: 60 },
+};
+
+function getCompositeKey(identifier: string, scope: RateLimitScope): string {
+  return `${scope}:${identifier}`;
+}
+
 export async function checkRateLimit(
   identifier: string,
   limit: number = 5,
@@ -61,7 +65,6 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const db = getRedis();
 
-  // Si Redis está disponible, usar Redis
   if (db) {
     try {
       const key = `ratelimit:${identifier}`;
@@ -81,18 +84,15 @@ export async function checkRateLimit(
         limit,
       };
     } catch {
-      // Si Redis falla, usar fallback en memoria
       redisAvailable = false;
     }
   }
 
-  // Fallback: usar memoria local
   const key = `ratelimit:${identifier}`;
   const now = Date.now();
   const entry = memoryStore.get(key);
 
   if (!entry || entry.expiresAt < now) {
-    // Primera request o entrada expirada
     memoryStore.set(key, {
       count: 1,
       expiresAt: now + window * 1000,
@@ -106,7 +106,6 @@ export async function checkRateLimit(
     };
   }
 
-  // Incrementar contador
   entry.count++;
   memoryStore.set(key, entry);
 
@@ -118,9 +117,23 @@ export async function checkRateLimit(
   };
 }
 
-/**
- * Extrae la IP del request, manejando proxies y load balancers
- */
+export async function checkRateLimitWithScope(
+  ip: string,
+  userId?: string,
+  scope: RateLimitScope = "api"
+): Promise<RateLimitResult> {
+  const config = rateLimitConfig[scope];
+  
+  if (userId) {
+    const userResult = await checkRateLimit(`user:${userId}`, config.limit, config.window);
+    if (!userResult.allowed) {
+      return userResult;
+    }
+  }
+  
+  return checkRateLimit(`ip:${ip}`, config.limit, config.window);
+}
+
 export function getIpFromRequest(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0] ?? "unknown";

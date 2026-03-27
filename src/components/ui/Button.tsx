@@ -19,6 +19,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       cursor: disabled || loading ? "not-allowed" : "pointer",
       opacity: disabled || loading ? 0.6 : 1,
       transition: "all 0.15s ease",
+      outline: "none",
     };
 
     const variantStyles: Record<string, React.CSSProperties> = {

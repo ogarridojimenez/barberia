@@ -1,27 +1,21 @@
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getCachedServicios } from "@/lib/cache";
 import { internalError } from "@/lib/api-errors";
 
 export async function GET() {
   try {
-    const supabase = createSupabaseAdminClient();
+    const servicios = await getCachedServicios(true);
+    
+    const response = NextResponse.json({ 
+      servicios: servicios.map(s => ({
+        id: s.id,
+        nombre: s.nombre,
+        descripcion: s.descripcion,
+        duracion_minutos: s.duracion_minutos,
+        precio: s.precio,
+      }))
+    });
 
-    const { data: servicios, error } = await supabase
-      .from("servicios")
-      .select("id, nombre, descripcion, duracion_minutos, precio")
-      .eq("activo", true)
-      .order("nombre");
-
-    if (error) {
-      return NextResponse.json(
-        { error: "DB_ERROR", message: "Error al obtener servicios" },
-        { status: 500 }
-      );
-    }
-
-    const response = NextResponse.json({ servicios: servicios || [] });
-
-    // Cache por 5 minutos (servicios cambian poco)
     response.headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
 
     return response;

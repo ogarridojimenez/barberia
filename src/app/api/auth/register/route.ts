@@ -17,6 +17,7 @@ const RegisterSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(100).optional(),
   apellidos: z.string().min(1, "Los apellidos son requeridos").max(100).optional(),
   foto_url: z.string().url("URL de foto inválida").optional().or(z.literal("")),
+  role: z.enum(["cliente", "barbero", "admin"]).default("cliente"),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, nombre, apellidos, foto_url } = parsed.data;
+    const { email, password, nombre, apellidos, foto_url, role } = parsed.data;
 
     // Rate limiting por IP (más estricto para registros: 3 por hora)
     const ip = getIpFromRequest(req);
@@ -70,12 +71,12 @@ export async function POST(req: NextRequest) {
       .insert({
         email,
         password_hash: passwordHash,
-        user_role: "cliente",
+        user_role: role,
         nombre: nombre || null,
         apellidos: apellidos || null,
         foto_url: foto_url || null,
       })
-      .select("id, email, nombre, apellidos, foto_url")
+      .select("id, email, nombre, apellidos, foto_url, user_role")
       .single();
 
     if (error) {
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
           nombre: user.nombre,
           apellidos: user.apellidos,
           foto_url: user.foto_url,
-          role: "cliente",
+          role: user.user_role,
         },
       },
       { status: 201 }

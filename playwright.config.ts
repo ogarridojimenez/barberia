@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import path from "path";
+
+const AUTH_FILE = path.join(__dirname, ".auth/admin.json");
 
 export default defineConfig({
   testDir: "./e2e",
@@ -7,10 +10,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+  globalSetup: require.resolve("./e2e/global-setup"),
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    storageState: AUTH_FILE,
   },
   projects: [
     {

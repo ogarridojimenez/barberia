@@ -17,6 +17,7 @@ const CreateUserSchema = z.object({
   apellidos: z.string().max(100).optional(),
   telefono: z.string().max(20).optional(),
   user_role: z.enum(["cliente", "barbero", "admin"]),
+  especialidad: z.string().max(100).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, nombre, apellidos, telefono, user_role } = parsed.data;
+    const { email, password, nombre, apellidos, telefono, user_role, especialidad } = parsed.data;
     const supabase = createSupabaseAdminClient();
 
     // Verificar que el email no exista
@@ -73,11 +74,13 @@ export async function POST(req: NextRequest) {
         nombre: nombre || null,
         apellidos: apellidos || null,
         telefono: telefono || null,
+        especialidad: user_role === "barbero" ? (especialidad || null) : null,
       })
       .select("id, email, nombre, apellidos, user_role")
       .single();
 
     if (error) {
+      console.error("Supabase insert error:", error);
       if (error.code === "23505") {
         return NextResponse.json(
           { error: "EMAIL_ALREADY_EXISTS", message: "Este email ya está registrado" },
@@ -85,13 +88,14 @@ export async function POST(req: NextRequest) {
         );
       }
       return NextResponse.json(
-        { error: "DB_ERROR", message: "Error al crear el usuario" },
+        { error: "DB_ERROR", message: "Error al crear el usuario", details: error.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (err) {
+    console.error("Create user error:", err);
     return internalError(err);
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
+import { fetchApi } from "@/lib/auth/client";
 import { useEffect, useState } from "react";
-import { apiGet } from "@/lib/auth/client";
 
 interface Stats {
   totalCitas: number;
@@ -20,13 +20,17 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch stats on mount and revalidate every 5 minutes
   useEffect(() => {
     fetchStats();
   }, []);
 
   async function fetchStats() {
     try {
-      const data = await apiGet<Stats>("/api/admin/stats");
+      setLoading(true);
+      setError(null);
+      const res = await fetchApi("/api/admin/stats");
+      const data = await res.json();
       setStats(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
