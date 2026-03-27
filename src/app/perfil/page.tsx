@@ -12,6 +12,8 @@ interface User {
   telefono?: string;
   foto_url?: string;
   created_at?: string;
+  user_role?: string;
+  especialidad?: string;
 }
 
 export default function PerfilPage() {
@@ -26,6 +28,8 @@ export default function PerfilPage() {
   const [apellidos, setApellidos] = useState("");
   const [telefono, setTelefono] = useState("");
   const [fotoUrl, setFotoUrl] = useState("");
+  const [especialidad, setEspecialidad] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   // Campos de contraseña
   const [currentPassword, setCurrentPassword] = useState("");
@@ -44,6 +48,8 @@ export default function PerfilPage() {
       setApellidos(data.user.apellidos || "");
       setTelefono(data.user.telefono || "");
       setFotoUrl(data.user.foto_url || "");
+      setEspecialidad(data.user.especialidad || "");
+      setUserRole(data.user.user_role || "");
     } catch (err) {
       console.error(err);
     } finally {
@@ -57,9 +63,21 @@ export default function PerfilPage() {
     setSaving(true);
 
     try {
+      const updateData: Record<string, string> = {
+        nombre,
+        apellidos,
+        telefono,
+        foto_url: fotoUrl,
+      };
+      
+      // Solo barberos pueden actualizar especialidad
+      if (userRole === "barbero") {
+        updateData.especialidad = especialidad;
+      }
+
       const res = await fetchApi("/api/me", {
         method: "PUT",
-        body: JSON.stringify({ nombre, apellidos, telefono, foto_url: fotoUrl }),
+        body: JSON.stringify(updateData),
       });
 
       const data = await res.json();
@@ -213,6 +231,26 @@ export default function PerfilPage() {
               style={inputStyle}
             />
           </div>
+
+          {/* Especialidad - solo para barberos */}
+          {userRole === "barbero" && (
+            <div>
+              <label style={labelStyle}>Especialidad</label>
+              <select
+                value={especialidad}
+                onChange={(e) => setEspecialidad(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="">Selecciona una especialidad</option>
+                <option value="Corte de cabello">Corte de cabello</option>
+                <option value="Barba y afeitado">Barba y afeitado</option>
+                <option value="Corte y barba">Corte y barba</option>
+                <option value="Tratamientos capilares">Tratamientos capilares</option>
+                <option value="Coloración">Coloración</option>
+                <option value="Arreglo de cejas">Arreglo de cejas</option>
+              </select>
+            </div>
+          )}
 
           {/* Miembro desde */}
           {user?.created_at && (

@@ -47,11 +47,12 @@ export async function GET(req: NextRequest) {
       .eq("user_role", "barbero");
 
     // Obtener datos paginados - mapear campos para compatibilidad con el frontend
+    // Ordenar por created_at para evitar problemas con valores null en nombre
     const { data: barberosData, error } = await supabase
       .from("app_users")
       .select("id, nombre, email, telefono, foto_url, especialidad, user_role, created_at")
       .eq("user_role", "barbero")
-      .order("nombre")
+      .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     // Mapear campos para compatibilidad con el frontend

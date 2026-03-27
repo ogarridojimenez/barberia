@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const supabase = createSupabaseAdminClient();
     const { data: user, error: userError } = await supabase
       .from("app_users")
-      .select("id, email, nombre, apellidos, telefono, foto_url, created_at")
+      .select("id, email, nombre, apellidos, telefono, foto_url, created_at, user_role, especialidad")
       .eq("id", payload.sub)
       .single();
 
@@ -44,6 +44,8 @@ export async function GET(req: NextRequest) {
         telefono: user.telefono,
         foto_url: user.foto_url,
         created_at: user.created_at,
+        user_role: user.user_role,
+        especialidad: user.especialidad,
       },
     });
   } catch (err) {
@@ -70,7 +72,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { nombre, apellidos, telefono, foto_url } = body;
+    const { nombre, apellidos, telefono, foto_url, especialidad } = body;
 
     // Validaciones con longitud máxima para prevenir DoS
     if (nombre !== undefined) {
@@ -133,17 +135,39 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    if (especialidad !== undefined) {
+      if (typeof especialidad !== "string") {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Especialidad debe ser texto" },
+          { status: 400 }
+        );
+      }
+      if (especialidad.length > 100) {
+        return NextResponse.json(
+          { error: "INVALID_INPUT", message: "Especialidad máximo 100 caracteres" },
+          { status: 400 }
+        );
+      }
+    }
+
     const supabase = createSupabaseAdminClient();
+    const updateData: Record<string, unknown> = {
+      nombre: nombre || null,
+      apellidos: apellidos || null,
+      telefono: telefono || null,
+      foto_url: foto_url || null,
+    };
+    
+    // Solo actualizar especialidad si se proporciona
+    if (especialidad !== undefined) {
+      updateData.especialidad = especialidad || null;
+    }
+
     const { data: user, error: updateError } = await supabase
       .from("app_users")
-      .update({
-        nombre: nombre || null,
-        apellidos: apellidos || null,
-        telefono: telefono || null,
-        foto_url: foto_url || null,
-      })
+      .update(updateData)
       .eq("id", payload.sub)
-      .select("id, email, nombre, apellidos, telefono, foto_url, created_at")
+      .select("id, email, nombre, apellidos, telefono, foto_url, created_at, user_role, especialidad")
       .single();
 
     if (updateError) {
@@ -162,6 +186,8 @@ export async function PUT(req: NextRequest) {
         telefono: user.telefono,
         foto_url: user.foto_url,
         created_at: user.created_at,
+        user_role: user.user_role,
+        especialidad: user.especialidad,
       },
     });
   } catch (err) {
