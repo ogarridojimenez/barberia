@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       telefono: b.telefono,
       foto_url: b.foto_url,
       email: b.email,
-      activo: true, // Los barberos en app_users siempre están activos
+      activo: true,
     }));
 
     if (error) {
